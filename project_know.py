@@ -5,7 +5,7 @@ Created on Fri Sep 11 12:22:07 2020
 @author: pelie
 """
 
-from colored import fg, bg, attr, style
+from colored import fg, bg, fore, attr, style
 import os
 import nltk
 
@@ -64,7 +64,7 @@ def main():
         file_idfs = compute_idfs(file_words)
         break
 
-        while True:
+    while True:
             # Get user query
             query = set(tokenize(input("What do you want to search for: ")))
     
@@ -85,8 +85,9 @@ def main():
         
             # Determine top sentence matches
             matches = top_sentences(query, sentences, idfs, n=SENTENCE_MATCHES)
-            for match in matches:
-                print(match)
+            for i, match in enumerate(matches):
+                #TODO - display filename of the sentence, highlight query words
+                print(f'{i+1}. {match}\n')
     
             # Check if user would like to continue searching
             cont = input('\nDo you want to continue? (y/n) ')
@@ -257,6 +258,7 @@ def load_pdf(file_sublist):
         print('Sorry, texts in the following file(s) are not parsable: ')
         for i, file in enumerate(err_files):
             print(f'{i+1}. {file}')
+        print('\n')
 
     return files
 
