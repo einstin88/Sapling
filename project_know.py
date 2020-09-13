@@ -7,16 +7,36 @@ Created on Fri Sep 11 12:22:07 2020
 
 from colored import fg, bg, attr, fore, back, style
 import os
+import nltk
 
-#TODO adjust control flows
+VERSION = 0.1
+FILE_MATCHES = 5
+SENTENCE_MATCHES = 5
+OPTION_test = {
+    'opt': ['Y', 'N'],
+    'Y': 'some text',
+    'N': 'some text',
+    'val': {
+        'Y': True,
+        'N': False}
+    }
+
+# TODO adjust control flows
+# maybe with numbered options?
+
 def main():
+    # Display start up information - version, usage, link to instructions
+    print('*' * 25)
+    print(f'You are using Know v{VERSION}')
+    print('*' * 25, '\n')
+
     while True:
         # May move this section to load_directory function, and make function call in load_data
         # Attempt to get and handle directory from user
         try:
             flag_d, file_list = get_directory()
         except TypeError:
-            cont0 = input('Try again (y) or quit program (n). \nYour choice: ')
+            cont0 = input('\nOptions: \nY: Try again or \nN: quit program \nYour choice: ')
             if cont0.lower() == 'y':
                 continue
             elif cont0.lower() == 'n':
@@ -33,19 +53,65 @@ def main():
             break
             #TODO - add location to loop to
 
-        # TODO - Load data and implement option to load different types of file (.pdf & .docx)
+        # Load texts from supported file into memory
         files = load_data(file_list)
-        print(files.keys())
 
-        # Check if user would like to continue searching
-        cont = input('\nDo you want to continue? (y/n) ')
-        if cont.lower() == 'y':
-            continue
-        elif cont.lower() == 'n':
-            break
-        else:
-            print('Unrecognized option. Please provide a valid option!')
-            # TODO - add location to loop to
+        # Compute idfs - each word carries a value to represent it's uniqueness
+        file_words = {
+            filename: tokenize(files[filename])
+            for filename in files
+            }
+        file_idfs = compute_idfs(file_words)
+        break
+
+        while True:
+            # Get user query
+            query = set(tokenize(input("What do you want to search for: ")))
+    
+            # Determine top file matches according to TF-IDF
+            filenames = top_files(query, file_words, file_idfs, n=FILE_MATCHES)
+        
+            # Extract sentences from top files
+            sentences = dict()
+            for filename in filenames:
+                for passage in files[filename].split("\n"):
+                    for sentence in nltk.sent_tokenize(passage):
+                        tokens = tokenize(sentence)
+                        if tokens:
+                            sentences[sentence] = tokens
+        
+            # Compute IDF values across sentences
+            idfs = compute_idfs(sentences)
+        
+            # Determine top sentence matches
+            matches = top_sentences(query, sentences, idfs, n=SENTENCE_MATCHES)
+            for match in matches:
+                print(match)
+    
+            # Check if user would like to continue searching
+            cont = input('\nDo you want to continue? (y/n) ')
+            if cont.lower() == 'y':
+                continue
+            elif cont.lower() == 'n':
+                print('Thank you for using Know. For feedback or issues, please contact me at pelie_888888@hotmail.com')
+                print('Goodbye!')
+                break
+            else:
+                print('Unrecognized option. Please provide a valid option!')
+                # TODO - add location to loop to
+
+
+def display_options(options):
+    print('Options:')
+    for option in options['opt']:
+        print(options[option])
+
+    sel = input('Your choice:').lower()
+
+    if sel in options['val']:
+        return options['val'][sel]
+    else:
+        print('Error message')
 
 
 def get_directory():
@@ -55,9 +121,9 @@ def get_directory():
     Limitations: will not go deeper than the given directory
     '''
     directory_found = False
-    valid_extensions = ['.pdf', '.txt', '.docx']
+    valid_extensions = ['.pdf', '.txt'] # '.docx' not implemented in this version
 
-    directory = input('Which folder(directory) do you want to load files from?\n[Please provide full path of your folder]\n')
+    directory = input(f'{fg(46)}Which folder(directory) do you want to load files from?{style.RESET}\n[Please provide full path of your folder]\n')
 
     # Check if valid input is given
     if os.path.exists(directory):
@@ -67,18 +133,22 @@ def get_directory():
         valid_files = dict()
 
         print(f'\n{bg(1)}Checking {len(file_list)} file(s) in \'{os.path.basename(directory)}\'.....{style.RESET}')
+        counter = 1
         for file in file_list:
             # get extension of each file in the directory
             ext = os.path.splitext(file)[1]
             if ext in valid_extensions:
-                #print(f'{fore.CYAN}{file}{style.RESET}')
+                print(f'{fore.CYAN}{counter}. {file}{style.RESET}')
+                counter += 1
+
                 path = os.path.join(directory, file)
                 if ext in valid_files:
                     valid_files[ext].append(path)
                 else:
                     valid_files[ext] = [path]
-            #else:
-                #print(file)
+
+            else:
+                print('- ', file)
 
         if len(valid_files) > 0:
             directory_found = True
@@ -109,6 +179,7 @@ def load_data(file_list):
     for ext in file_list:
         if ext == '.pdf':
             files.update(load_pdf(file_list[ext]))
+        # TODO - .docx and .txt do nothing at the moment
         elif ext == '.doc':
             file_list[ext]
         elif ext == '.txt':
@@ -118,13 +189,74 @@ def load_data(file_list):
 
 
 def load_pdf(file_sublist):
-    from tika import parser
+    from tika import unpack
 
     files = dict()
+    err_files = []
+    tp = ['metadata', 'pdf:charsPerPage', 'pdf:unmappedUnicodeCharsPerPage',
+          'content', 'xmpTPg:NPages']
+    end_filters = ['References', 'REFERENCES', 'Bibliography', 'BIBLIOGRAPHY']
 
     print('Loading pdfs....')
     for file_path in file_sublist:
-        files[os.path.basename(file_path)] = parser.from_file(file_path)['content']
+        parsed_file = unpack.from_file(file_path)
+        file_name = os.path.basename(file_path)
+        raw = ''
+
+        ### Check if texts in file are parsable
+        # Determine number of pages with large amt of unmapped chars
+        umc = sum(True for i in parsed_file[tp[0]][tp[2]] if int(i) > 250)
+
+        # Determine number of pages with 0 char = pages are images
+        nc = sum(True for i in parsed_file[tp[0]][tp[1]] if int(i) == 0)
+
+        n_pages = int(parsed_file[tp[0]][tp[4]])
+
+        # TODO - implement OCR function for these files
+        if umc > 2 or nc > 0.5 * n_pages:
+            err_files.append(file_name)
+            continue
+
+        ### Attempt to filter out references
+        # A list of number of chars for each page
+        char_counts = parsed_file[tp[0]][tp[1]]
+
+        # Look for keywords at the ends of file
+        ends = int(0.75* n_pages) -1
+        ends = sum(int(char_counts[j]) for j in range(ends, n_pages))
+        ending = parsed_file[tp[3]][-ends:]
+        for ef in end_filters:
+            if ef in ending:
+                print(f'Found \'{ef}\' section in {file_name}')
+                ind_ref = len(ending) - ending.find(ef)
+                raw = parsed_file[tp[3]][:-ind_ref]
+                break
+
+        # Could not find keyword
+        try:
+            if len(raw) > 0:
+                pass
+        except UnboundLocalError:
+            print(f'Could not find reference section in {file_name}')
+            raw = parsed_file[tp[3]]
+
+        ### Attempt to detect 'title page' by it's char count
+        avg_word_count = sum(int(i) for i in char_counts) / n_pages
+
+        # Char count of the first page
+        n = int(char_counts[0])
+
+        if n < avg_word_count:
+            print('Found title page in', file_name, '\n')
+            files[file_name] = raw[n:].replace('\n', '')
+        else:
+            print('Could not find or No title page in', file_name, '\n')
+            files[file_name] = raw.replace('\n', '')
+
+    if len(err_files) > 0:
+        print('Sorry, texts in the following file(s) are not parsable: ')
+        for i, file in enumerate(err_files):
+            print(f'{i+1}. {file}')
 
     return files
 
@@ -139,6 +271,152 @@ def load_docs(file_sublist):
         file = Document(file_path)
 
     return files
+
+def load_texts(file_sublist):
+    files = dict()
+
+    print('Loading texts.....')
+    for file_path in file_sublist:
+        with open(file_path, encoding='utf-8') as f:
+            files[os.path.basename(file_path)] = f.read()
+
+    return files
+
+
+def tokenize(document):
+    """
+    Given a document (represented as a string), return a list of all of the
+    words in that document, in order.
+
+    Process document by coverting all words to lowercase, and removing any
+    punctuation or English stopwords.
+    """
+    import string
+    stopwords = nltk.corpus.stopwords.words('english')
+
+    # Process: tokenize string --> filter punctuation --> convert to lowercase
+    wordlist = [(word.lower() if word.isalpha() else word)
+                for word in nltk.word_tokenize(document)
+                if word not in string.punctuation]
+
+    # Filter out stop words from the list
+    wordlist = [token for token in wordlist
+                if token not in stopwords]
+
+    return wordlist
+
+
+def compute_idfs(documents):
+    """
+    Given a dictionary of `documents` that maps names of documents to a list
+    of words, return a dictionary that maps words to their IDF values.
+
+    Any word that appears in at least one of the documents should be in the
+    resulting dictionary.
+    """
+    import math
+
+    # Constant -> number of files in 'documents'
+    n_docs = len(documents)
+
+    # Dictionary to keep track of number of documents a word appeared in
+    df_word = dict()
+
+    for filename in documents:
+        for word in documents[filename]:
+
+            # Add an entry for the word when encountered for the first time
+            if word not in df_word:
+               df_word[word] = [filename]
+
+            # Add filename associated with the word for the first time
+            elif word in df_word and filename not in df_word[word]:
+                df_word[word].append(filename)
+
+    idf_word = dict()
+    for wd in df_word:
+        idf_word[wd] = math.log(n_docs / len(df_word[wd]))
+
+    return idf_word
+
+
+def top_files(query, files, idfs, n):
+    """
+    Given a `query` (a set of words), `files` (a dictionary mapping names of
+    files to a list of their words), and `idfs` (a dictionary mapping words
+    to their IDF values), return a list of the filenames of the the `n` top
+    files that match the query, ranked according to tf-idf.
+    """
+    from collections import Counter
+
+    # Initialize dict() using each file with value 0 as items
+    tfidfs = dict(zip(files.keys(), [0]*len(files)))
+
+    # Calculate tfidf for each search term for each file, then add the value
+    # to the score of the file
+    for word in query:
+        for filename in files:
+
+            # Calculate tf
+            c = Counter(files[filename])
+            tfidfs[filename] += c[word] * idfs[word]
+
+    # Sort tfidf.items according to its value, then loop the sorted list and
+    # store the key according to the order
+    ranked = [k for k,v in sorted(tfidfs.items(),
+                                  key=lambda i: i[1], reverse=True)]
+
+    # Slice n-elements from the ranked list and return it
+    return ranked[:n]
+
+
+def top_sentences(query, sentences, idfs, n):
+    """
+    Given a `query` (a set of words), `sentences` (a dictionary mapping
+    sentences to a list of their words), and `idfs` (a dictionary mapping words
+    to their IDF values), return a list of the `n` top sentences that match
+    the query, ranked according to idf. If there are ties, preference should
+    be given to sentences that have a higher query term density.
+    """
+    sent_score = dict()
+
+    for word in query:
+        for sentence in sentences:
+
+            # Update sentence score if word is in the sentence
+            if word in sentences[sentence]:
+                if sentence not in sent_score:
+                    sent_score[sentence] = idfs[word]
+                else:
+                    sent_score[sentence] += idfs[word]
+
+    ranked = [k for k,v in sorted(sent_score.items(),
+                                  key=lambda i: i[1], reverse=True)]
+
+    # Check if there is a tie btwn the n'th sentence and (n+1)'th sentence
+    if sent_score[ranked[n-1]] == sent_score[ranked[n]]:
+        from collections import Counter
+        c0 = Counter(sentences[ranked[n-1]])
+        c1 = Counter(sentences[ranked[n]])
+        sent_0, sent_1 = [0,0]
+
+        # Calculate query term density
+        for word in query:
+            sent_0 += (c0[word] if word in c0 else 0)
+            sent_1 += (c1[word] if word in c1 else 0)
+
+        sent_0 /= len(sentences[ranked[n-1]])
+        sent_1 /= len(sentences[ranked[n]])
+
+        if sent_0 > sent_1:
+            return ranked[:n]
+        elif n == 1:
+            return [ranked[1]]
+        else:
+            return ranked[:n-1] + [ranked[n]]
+
+    else:
+        return ranked[:n]
 
 
 if __name__ == "__main__":
