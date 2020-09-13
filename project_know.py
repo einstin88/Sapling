@@ -5,7 +5,7 @@ Created on Fri Sep 11 12:22:07 2020
 @author: pelie
 """
 
-from colored import fg, bg, attr, fore, back, style
+from colored import fg, bg, attr, style
 import os
 import nltk
 
