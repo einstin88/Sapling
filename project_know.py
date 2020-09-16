@@ -6,8 +6,9 @@ Created on Fri Sep 11 12:22:07 2020
 """
 
 from colored import fg, bg, fore, attr, style
+from nltk.tokenize import sent_tokenize
 import os
-import nltk
+
 
 VERSION = 0.1
 FILE_MATCHES = 5
@@ -75,7 +76,8 @@ def main():
             sentences = dict()
             for filename in filenames:
                 for passage in files[filename].split("\n"):
-                    for sentence in nltk.sent_tokenize(passage):
+                    print('x')
+                    for sentence in sent_tokenize(passage):
                         tokens = tokenize(sentence)
                         if tokens:
                             sentences[sentence] = tokens
@@ -200,9 +202,14 @@ def load_pdf(file_sublist):
 
     print('Loading pdfs....')
     for file_path in file_sublist:
-        parsed_file = unpack.from_file(file_path)
+        try:
+            parsed_file = unpack.from_file(file_path)
+
+        except UnicodeDecodeError:
+            from tika import parser
+            parsed_file = parser.from_file(file_path)
+
         file_name = os.path.basename(file_path)
-        raw = ''
 
         ### Check if texts in file are parsable
         # Determine number of pages with large amt of unmapped chars
@@ -249,10 +256,10 @@ def load_pdf(file_sublist):
 
         if n < avg_word_count:
             print('Found title page in', file_name, '\n')
-            files[file_name] = raw[n:].replace('\n', '')
+            files[file_name] = raw[n:].replace('\n', ' ')
         else:
             print('Could not find or No title page in', file_name, '\n')
-            files[file_name] = raw.replace('\n', '')
+            files[file_name] = raw.replace('\n', ' ')
 
     if len(err_files) > 0:
         print('Sorry, texts in the following file(s) are not parsable: ')
@@ -294,16 +301,24 @@ def tokenize(document):
     punctuation or English stopwords.
     """
     import string
-    stopwords = nltk.corpus.stopwords.words('english')
+    from nltk.corpus import stopwords
+    from nltk.tokenize import wordpunct_tokenize
+    from nltk.stem import WordNetLemmatizer
+
+    stopwords_list = stopwords.words('english')
+    wnl = WordNetLemmatizer()
 
     # Process: tokenize string --> filter punctuation --> convert to lowercase
     wordlist = [(word.lower() if word.isalpha() else word)
-                for word in nltk.word_tokenize(document)
+                for word in wordpunct_tokenize(document)
                 if word not in string.punctuation]
 
     # Filter out stop words from the list
     wordlist = [token for token in wordlist
-                if token not in stopwords]
+                if token not in stopwords_list]
+
+    # Lemmatize remaining words from the list
+    wordlist =[wnl.lemmatize(wd) for wd in wordlist]
 
     return wordlist
 
