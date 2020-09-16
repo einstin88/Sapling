@@ -3,7 +3,6 @@
 - Provide intelligent answers based on your given reading materials
 
 
-
 ### How To's:
 1) **Installation and use for the first time**
 	
@@ -22,17 +21,16 @@
 	- ***Option 2:***
 
 
-
 ### Features
 
 
-
 ### version history
-- v0.1 - alpha testing, initial release
+- | ver. | details
+--- | --- | ---
+1. | v0.1 | alpha testing, initial release
 	- *features available*
 		1. Extract texts from PDFs
 		2. Return 5 top matching sentences to your query
-
 
 
 ### Future:
