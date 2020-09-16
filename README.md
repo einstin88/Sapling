@@ -25,7 +25,7 @@
 
 
 ### version history
-- | ver. | details
+No. | Ver. | Details
 --- | --- | ---
 1. | v0.1 | alpha testing, initial release
 	- *features available*
