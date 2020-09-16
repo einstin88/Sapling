@@ -14,7 +14,7 @@
 	- latest Java runtime installed 
 		- Download for [any platform (recommended)](https://java.com/en/download/) OR [specific platform (advanced)](https://java.com/en/download/manual.jsp)
 
-2) (*MAC*) **Copy the path to the directory you want to load**
+2) (*MacOS*) **Copy the path of the directory that you want to load**
 	- ***Option 1:***
 		- [ ] to add descriptions and screenshots
 
