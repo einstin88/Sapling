@@ -1,7 +1,7 @@
 # Sapling v0.1
  Provide intelligent answers based on your given reading materials
 
-# HOW TOs:
+### HOW TOs:
 1) **Install and use for the first time**
 	***Required***:
 	- 'Sapling' package
@@ -16,15 +16,15 @@
 
 		***Option 2:***
 
-# Features
+### Features
 
-# version history
+### version history
 - v0.1 - alpha testing, initial release
 	*features available*
 	1. Extract texts from PDFs
 	2. Return 5 top matching sentences to your query
 
-# Future:
+### Future:
 - [ ] installation instructions & requirements
 - [ ] compatible file types
 - [ ] features demonstration
