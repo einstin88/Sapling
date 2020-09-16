@@ -3,11 +3,15 @@
 
 ### HOW TOs:
 1) **Install and use for the first time**
+	
 	***Required***:
 	- 'Sapling' package
+
 	[Windows]() [Mac]()
 	[ ] post links once program is completed and compiled
+
 	- latest Java runtime installed 
+	
 	Download for [any platform (recommended)](https://java.com/en/download/) OR [specific platform (advanced)](https://java.com/en/download/manual.jsp)
 
 2) (*MAC*) **Copy the path to the directory you want to load**
