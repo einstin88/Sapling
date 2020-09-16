@@ -25,9 +25,7 @@
 
 
 ### version history
-No. | Ver. | Details
---- | --- | ---
-1. | v0.1 | alpha testing, initial release
+- v0.1 alpha testing, initial release
 	- *features available*
 		1. Extract texts from PDFs
 		2. Return 5 top matching sentences to your query
