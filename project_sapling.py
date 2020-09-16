@@ -9,32 +9,23 @@ from colored import fg, bg, fore, attr, style
 from nltk.tokenize import sent_tokenize
 import os
 
-
+### Global vars
 VERSION = 0.1
 FILE_MATCHES = 5
 SENTENCE_MATCHES = 5
+
+### Color schemes
 COLR_SYS = bg(9) # Color for displaying high level msg
 COLR_FILE = fg(12) # Color for displaying compatible files
 COLR_UI = fg(46) # Color for displaying user interactions
 COLR_WARN = bg(11) + fg(1) + attr(1)
 C_RESET = style.RESET
-OPTION_test = {
-    'opt': ['Y', 'N'],
-    'Y': 'some text',
-    'N': 'some text',
-    'val': {
-        'Y': True,
-        'N': False}
-    }
 
-# TODO adjust control flows
-# maybe with numbered options?
 
+# TODO adjust control flows with numbered options in subroutine function
 def main():
-    # Display start up information - version, usage, link to instructions
-    print('*' * 25)
-    print(f'You are using Know v{VERSION}')
-    print('*' * 25, '\n')
+
+    print_title()
 
     while True:
         # May move this section to load_directory function, and make function call in load_data
@@ -100,15 +91,46 @@ def main():
             if cont.lower() == 'y':
                 continue
             elif cont.lower() == 'n':
-                print('Thank you for using Know. For feedback or issues, please contact me at pelie_888888@hotmail.com')
-                print('Goodbye!')
+                print('{COLR_SYS}Thank you for using Know. For feedback or issues, please contact me at pelie_888888@hotmail.com')
+                print('Goodbye!{C_RESET}')
                 break
             else:
                 print('Unrecognized option. Please provide a valid option!')
                 # TODO - add location to loop to
 
 def subroutines(sel):
+    OPTION_test = {
+    'opt': ['Y', 'N'],
+    'Y': 'some text',
+    'N': 'some text',
+    'val': {
+        'Y': True,
+        'N': False}
+    }
+
     return sel
+
+def print_title():
+    '''
+    Display start up information - version, usage, link to instructions
+    '''
+    import random
+
+    path = os.path.abspath('ascii_title')
+    file = random.choice(os.listdir(path))
+    default = f'You are using v{VERSION} of'
+
+    with open(os.path.join(path, file), encoding='utf-8') as f:
+        logo = f.read().splitlines()
+        length = len(logo[0])
+        print('*' * length)
+        print(' '* ((length - len(default))//2), default)
+        for line in logo:
+            print(line.replace('\n', ''))
+
+        print('For instructions, tutorials or latest updates, please visit \nhttps://github.com/einstin88/Sapling/blob/master/README.md')
+        print('*' * length, '\n')
+
 
 def display_options(options):
     print('Options:')
