@@ -38,6 +38,7 @@
 - [ ] changelog
 - [ ] disclaimer
 - *Features*
+	- [ ] OCR capability for unreadable PDFs
 	- [ ] extract text from docx and txt files
 - *Bug fixes*
 	- *None*
