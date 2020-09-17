@@ -5,7 +5,7 @@ Created on Fri Sep 11 12:22:07 2020
 @author: pelie
 """
 
-from colored import fg, bg, fore, attr, style
+from colored import fg, bg, attr, style
 from nltk.tokenize import sent_tokenize
 import os
 
@@ -15,10 +15,11 @@ FILE_MATCHES = 5
 SENTENCE_MATCHES = 5
 
 ### Color schemes
-COLR_SYS = bg(9) # Color for displaying high level msg
-COLR_FILE = fg(12) # Color for displaying compatible files
-COLR_UI = fg(46) # Color for displaying user interactions
-COLR_WARN = bg(11) + fg(1) + attr(1)
+CLR_SYS = bg(9) # Color for displaying high level msg
+CLR_FILE = fg(12) # Color for displaying compatible files
+CLR_UI = fg(46) # Color for displaying user interactions
+CLR_WARN = bg(11) + fg(1) + attr(1)
+CLR_SOFT_WARN = fg(1)
 C_RESET = style.RESET
 
 
@@ -27,88 +28,121 @@ def main():
 
     print_title()
 
+    # Get a directory from user
+    file_list = subroutines(1)
+    # Pre-process files from directory
+    files, file_words, file_idfs = subroutines(2, f_list=file_list)
+
+    sent_tokens = dict()
     while True:
-        # May move this section to load_directory function, and make function call in load_data
-        # Attempt to get and handle directory from user
-        try:
-            flag_d, file_list = get_directory()
-        except TypeError:
-            cont0 = input('\nOptions: \nY: Try again or \nN: quit program \nYour choice: ')
-            if cont0.lower() == 'y':
-                continue
-            elif cont0.lower() == 'n':
-                break
-            else:
-                print('Unrecognized option. Please provide a valid option!')
-                continue
-                #TODO - add location to loop to
+        # Get query
+        query = subroutines(3)
+        # Process query
+        sent_tokens.update(subroutines(4, q=query, f=files, f_words=file_words, f_idfs=file_idfs))
 
-        if flag_d:
-            print(f'{sum(len(file_list[k]) for k in file_list)} compatible file(s) found.')
+        # Handle repeat query
+        choice = process_options('main_0')
+        if choice:
+            continue
         else:
-            print('Sorry, no compatible files found :(')
-            break
-            #TODO - add location to loop to
+            terminate()
 
-        # Load texts from supported file into memory
-        files = load_data(file_list)
 
-        # Compute idfs - each word carries a value to represent it's uniqueness
+def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
+
+    # Get and handle directory from user
+    if sel == 1:
+        while True:
+            try:
+                flag_d, file_list = get_directory()
+            except TypeError:
+                choice = process_options('sub1_0')
+                if choice:
+                    continue
+                else:
+                    terminate()
+
+            if flag_d:
+                print(f'{sum(len(file_list[k]) for k in file_list)} compatible file(s) found.\n')
+                return file_list
+            else:
+                print('Sorry, no compatible files found :(\n')
+                choice = process_options('sub1_0')
+                if choice:
+                    continue
+                else:
+                    terminate()
+
+    # Texts preprocessing
+    if sel == 2:
+        # Load texts from compatible file into memory
+        files = load_data(f_list)
+
+        # Tokenize the cleaned texts
         file_words = {
             filename: tokenize(files[filename])
             for filename in files
             }
-        file_idfs = compute_idfs(file_words)
-        break
 
-    while True:
+        file_idfs = compute_idfs(file_words)
+
+        return files, file_words, file_idfs
+
+    # Get and handle query
+    if sel == 3:
+        while True:
             # Get user query
             query = set(tokenize(input("What do you want to search for: ")))
-    
-            # Determine top file matches according to TF-IDF
-            filenames = top_files(query, file_words, file_idfs, n=FILE_MATCHES)
-        
-            # Extract sentences from top files
-            sentences = dict()
-            for filename in filenames:
-                for passage in files[filename].split("\n"):
-                    for sentence in sent_tokenize(passage):
-                        tokens = tokenize(sentence)
-                        if tokens:
-                            sentences[sentence] = tokens
-        
-            # Compute IDF values across sentences
-            idfs = compute_idfs(sentences)
-        
-            # Determine top sentence matches
-            matches = top_sentences(query, sentences, idfs, n=SENTENCE_MATCHES)
-            for i, match in enumerate(matches):
-                #TODO - display filename of the sentence, highlight query words
-                print(f'{i+1}. {match}\n')
-    
-            # Check if user would like to continue searching
-            cont = input('\nDo you want to continue? (y/n) ')
-            if cont.lower() == 'y':
-                continue
-            elif cont.lower() == 'n':
-                print('{COLR_SYS}Thank you for using Know. For feedback or issues, please contact me at pelie_888888@hotmail.com')
-                print('Goodbye!{C_RESET}')
-                break
+            if len(query) > 0:
+                print('Processing your query...')
+                return query
             else:
-                print('Unrecognized option. Please provide a valid option!')
-                # TODO - add location to loop to
+                print(f'{CLR_SOFT_WARN}You did not enter any query{C_RESET}')
+                choice = process_options('sub3_0')
+                if choice:
+                    terminate()
+                else:
+                    continue
 
-def subroutines(sel):
-    OPTION_test = {
-    'opt': ['Y', 'N'],
-    'Y': 'some text',
-    'N': 'some text',
-    'val': {
-        'Y': True,
-        'N': False}
-    }
+    # Process query and print results
+    if sel == 4:
+        # Determine top file matches according to TF-IDF
+        filenames = top_files(q, f_words, f_idfs, n=FILE_MATCHES)
+        
+        # Extract sentences from top files
+        sentences = dict()
+        sent_tkn_files = dict()
 
-    return sel
+        for filename in filenames:
+            #for passage in files[filename].split("\n"):
+            sent_tkn_files[filename] = set()
+            for sentence in sent_tokenize(f[filename]):
+                    tokens = tokenize(sentence)
+                    if len(tokens) > 6:
+                        sentences[sentence] = tokens
+                        sent_tkn_files[filename].add(sentence)
+        
+        # Compute IDF values across sentences
+        idfs = compute_idfs(sentences)
+        
+        # Determine top sentence matches
+        matches = top_sentences(q, sentences, idfs, n=SENTENCE_MATCHES)
+        for i, match in enumerate(matches):
+            #TODO - display filename of the sentence, highlight query words
+            for file in filenames:
+                if match in sent_tkn_files[file]:
+                    text = f''
+                    for word in sentences[match]:
+                        if word in q:
+                            text += f'{CLR_FILE}{word}{C_RESET} '
+                        else:
+                            text += f'{word} '
+                    print(f'{i+1}. {file}')
+                    print(f'{text:<5}\n')
+                    break
+
+        return sent_tkn_files
+
 
 def print_title():
     '''
@@ -119,30 +153,68 @@ def print_title():
     path = os.path.abspath('ascii_title')
     file = random.choice(os.listdir(path))
     default = f'You are using v{VERSION} of'
+    end_quote = ['For instructions, tutorials or latest updates, please visit',
+                 'https://github.com/einstin88/Sapling/blob/master/README.md']
+    min_length = max(len(i) for i in end_quote)
 
     with open(os.path.join(path, file), encoding='utf-8') as f:
         logo = f.read().splitlines()
         length = len(logo[0])
-        print('*' * length)
-        print(' '* ((length - len(default))//2), default)
+
+        if length > min_length:
+            min_length = length
+            logo_offset = 0
+        else:
+            logo_offset = (min_length - length)//2 - 1
+
+        ## Output Section
+        print()
+        print('*' * min_length)
+        print(' '* ((min_length - len(default))//2 -1), default)
         for line in logo:
-            print(line.replace('\n', ''))
+            print(' ' * logo_offset, line)
+        print()
+        for txt in end_quote:
+            print(txt)
+        print('*' * min_length, '\n')
 
-        print('For instructions, tutorials or latest updates, please visit \nhttps://github.com/einstin88/Sapling/blob/master/README.md')
-        print('*' * length, '\n')
 
+def process_options(caller):
+    optns = ['1', '2']
 
-def display_options(options):
-    print('Options:')
-    for option in options['opt']:
-        print(options[option])
+    OPTIONS = {
+        'get_directory_0': {
+            '1': '[1] Would you like to choose another directory,',
+            '2': '[2] or proceed?'
+            },
+        'main_0': {
+            '1': '[1] Do you want to make another query,',
+            '2': '[2] or quit program'
+            },
+        'sub1_0': {
+            '1': '[1] Try with another directory,',
+            '2': '[2] or quit program'
+            },
+        'sub3_0': {
+            '1': '[1] Do you want to quit program,',
+            '2': '[2] or provide a query'
+            }
+    }
 
-    sel = input('Your choice:').lower()
+    for option in optns:
+        print(OPTIONS[caller][option])
 
-    if sel in options['val']:
-        return options['val'][sel]
-    else:
-        print('Error message')
+    while True:
+        sel = input('Your choice: ')
+
+        if sel == '1':
+            return True
+        elif sel == '2':
+            return False
+        elif sel == 'quit':
+            terminate()
+        else:
+            print(f'{CLR_WARN}Invalid option. Please provide a valid option!{C_RESET}\n')
 
 
 def get_directory():
@@ -154,22 +226,46 @@ def get_directory():
     directory_found = False
     valid_extensions = ['.pdf', '.txt'] # '.docx' not implemented in this version
 
-    directory = input(f'{COLR_UI}Which folder(directory) do you want to load files from?{C_RESET}\n[Please provide full path of your folder]\n')
+    while True:
+        directory = input(f'{CLR_UI}Which folder do you want to load files from?{C_RESET}\n[Please provide full path of your folder].\n')
+        # Correct input format when path was given by user using drag and drop
+        if directory[0] == '\'':
+            directory = directory[1:-1]
+    
+        # Check if valid input is given
+        if os.path.exists(directory):
+            if os.path.isdir(directory):
+                file_list = os.listdir(directory)
+            elif os.path.isfile(directory):
+                file_list = [os.path.basename(directory)]
 
-    # Check if valid input is given
-    if os.path.exists(directory):
+        else:
+            print(f'\n{CLR_WARN}Oops!! Error: \'{directory}\' not found!{C_RESET}')
+            return
+    
+        if len(file_list) == 1:
+            print(f'\n{CLR_SOFT_WARN}Warning: you have only provided one file. Query results may be inaccurate.{C_RESET}')
+            choice = process_options('get_directory_0')
+    
+            if choice:
+                continue
+            else:
+                break
+        else:
+            break
 
-        # Check if path contains valid file
-        file_list = os.listdir(directory)
-        valid_files = dict()
+    # Check if path contains valid file
+    valid_files = dict()
+    counter = 1
 
-        print(f'\n{COLR_SYS}Checking {len(file_list)} file(s) in \'{os.path.basename(directory)}\'.....{C_RESET}')
-        counter = 1
-        for file in file_list:
-            # get extension of each file in the directory
+    print(f'\n{CLR_SYS}Checking {len(file_list)} file' +
+          ('s in' if len(file_list)>1 else '') +
+          f' \'{os.path.basename(directory)}\'.....{C_RESET}')
+    for file in file_list:
+            # Get extension of each file in the directory
             ext = os.path.splitext(file)[1]
             if ext in valid_extensions:
-                print(f'{COLR_FILE}{counter}. {file}{C_RESET}')
+                print(f'{CLR_FILE}{counter}. {file}{C_RESET}')
                 counter += 1
 
                 path = os.path.join(directory, file)
@@ -181,12 +277,8 @@ def get_directory():
             else:
                 print('- ', file)
 
-        if len(valid_files) > 0:
+    if len(valid_files) > 0:
             directory_found = True
-
-    else:
-        print(f'\n{COLR_WARN}Oops!! Error: \'{directory}\' not found!{C_RESET}')
-        return
 
     return (directory_found, valid_files)
 
@@ -211,11 +303,11 @@ def load_data(file_list):
     for ext in file_list:
         if ext == '.pdf':
             files.update(load_pdf(file_list[ext]))
-        # TODO - .docx and .txt do nothing at the moment
+        # TODO - .docx do nothing at the moment
         elif ext == '.doc':
-            file_list[ext]
+            files.update(load_docs(file_list[ext]))
         elif ext == '.txt':
-            file_list[ext]
+            files.update(load_texts(file_list[ext]))
 
     return files
 
@@ -245,6 +337,7 @@ def load_pdf(file_sublist):
     print('Loading pdfs....')
     counter = 1
     for file_path in file_sublist:
+        #TODO Implement XML parsing and regex processing
         try:
             parsed_file = unpack.from_file(file_path)
 
@@ -281,7 +374,7 @@ def load_pdf(file_sublist):
         ending = parsed_file[tp[3]][-ends:]
         for ef in end_filters:
             if ef in ending:
-                print(f'Found {COLR_FILE}\'{ef}\'{C_RESET} section')
+                print(f'Found {CLR_FILE}\'{ef}\'{C_RESET} section')
                 ind_ref = len(ending) - ending.find(ef)
                 raw = parsed_file[tp[3]][:-ind_ref]
                 break
@@ -291,7 +384,7 @@ def load_pdf(file_sublist):
             if len(raw) > 0:
                 pass
         except UnboundLocalError:
-            print('Could not find or No (COLR_WARN}reference{C_RESET} section')
+            print('Could not find or No (CLR_SOFT_WARN}reference{C_RESET} section')
             raw = parsed_file[tp[3]]
 
         ### Attempt to detect 'title page' by it's char count
@@ -301,29 +394,31 @@ def load_pdf(file_sublist):
         n = int(char_counts[0])
 
         if n < avg_word_count:
-            print(f'Found {COLR_FILE}title{C_RESET} page \n')
-            files[file_name] = raw[n:].replace('-\n', '')
+            print(f'Found {CLR_FILE}title{C_RESET} page \n')
+            raw = raw[n:].replace('-\n', '')
+            files[file_name] = raw.replace('\n', ' ')
         else:
-            print(f'Could not find or No {COLR_WARN}title{C_RESET} page \n')
-            files[file_name] = raw.replace('-\n', ' ')
+            print(f'Could not find or No {CLR_SOFT_WARN}title{C_RESET} page \n')
+            raw = raw.replace('-\n', '')
+            files[file_name] = raw.replace('\n', ' ')
 
     if len(err_files) > 0:
         print('Sorry, texts in the following file(s) are not parsable: ')
         for i, file in enumerate(err_files):
             print(f'{i+1}. {file}')
-        print('\n')
+        print()
 
     return files
 
 
 def load_docs(file_sublist):
-    from docx import Document
+    #from docx import Document
 
     files = dict()
 
     print('Loading docx\'s.....')
-    for file_path in file_sublist:
-        file = Document(file_path)
+    #for file_path in file_sublist:
+     #   file = Document(file_path)
 
     return files
 
@@ -364,7 +459,7 @@ def tokenize(document):
                 if token not in stopwords_list]
 
     # Lemmatize remaining words from the list
-    wordlist =[wnl.lemmatize(wd) for wd in wordlist]
+    wordlist = [wnl.lemmatize(wd) for wd in wordlist]
 
     return wordlist
 
@@ -377,7 +472,7 @@ def compute_idfs(documents):
     Any word that appears in at least one of the documents should be in the
     resulting dictionary.
     """
-    import math
+    from math import log
 
     # Constant -> number of files in 'documents'
     n_docs = len(documents)
@@ -398,7 +493,7 @@ def compute_idfs(documents):
 
     idf_word = dict()
     for wd in df_word:
-        idf_word[wd] = math.log(n_docs / len(df_word[wd]))
+        idf_word[wd] = log(n_docs / len(df_word[wd]))
 
     return idf_word
 
@@ -453,8 +548,12 @@ def top_sentences(query, sentences, idfs, n):
                 else:
                     sent_score[sentence] += idfs[word]
 
+
     ranked = [k for k,v in sorted(sent_score.items(),
                                   key=lambda i: i[1], reverse=True)]
+
+    if len(ranked) < n:
+        return ranked
 
     # Check if there is a tie btwn the n'th sentence and (n+1)'th sentence
     if sent_score[ranked[n-1]] == sent_score[ranked[n]]:
@@ -480,6 +579,14 @@ def top_sentences(query, sentences, idfs, n):
 
     else:
         return ranked[:n]
+
+
+def terminate():
+    import sys
+
+    print(f'{CLR_SYS}Thank you for using Sapling. For feedbacks or issues, please contact me at pelie_888888@hotmail.com{C_RESET}')
+    print('Goodbye!')
+    sys.exit()
 
 
 if __name__ == "__main__":
