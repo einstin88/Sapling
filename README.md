@@ -1,10 +1,16 @@
 # Sapling 
-- v0.1
-- Provide intelligent answers based on your given reading materials
+- current release: 'v0.1'
+- *Provide intelligent answers based on your given reading materials*
+- Intended for journal articles, but can also be used for any text files such as pdf of textbook chapters or e-book
+
+### Features
+- search keywords across multiple documents and return the 5 most relevant sentences
+
+*Returned sentences may not be full sentence. This will be fixed in future versions*
 
 
 ### How To's:
-1) **Installation and use for the first time**
+1) **Installation and using Sapling for the first time**
 	
 	***Required***:
 	- 'Sapling' package
@@ -19,11 +25,6 @@
 		- [ ] to add descriptions and screenshots
 
 	- ***Option 2:***
-
-
-### Features
-- search keywords across multiple documents return 5 most relevant sentences
-
 
 
 ### version history
@@ -41,9 +42,12 @@
 - [x] changelog
 - [ ] disclaimer
 - *Features*
+	- [ ] ability to change the number of results returned
 	- [ ] OCR capability for unreadable PDFs
 	- [ ] extract text from docx files
 	- [ ] save output to pdf
 	- [ ] POS parsing
+	- [ ] handles different types of questions differently. eg. how/why/what questions
+	- [ ] host the scirpt in the cloud for web based deployment
 - *Bug fixes*
 	- [ ] handle error when query does not produce any matches
