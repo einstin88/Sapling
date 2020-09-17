@@ -22,6 +22,8 @@
 
 
 ### Features
+- search keywords across multiple documents return 5 most relevant sentences
+
 
 
 ### version history
@@ -31,14 +33,17 @@
 		2. Return 5 top matching sentences to your query
 
 
-### Future:
+### Future improvements:
 - [ ] installation instructions & requirements
 - [ ] compatible file types
 - [ ] features demonstration
-- [ ] changelog
+- [ ] create link to form for feedback or issue reporting 
+- [x] changelog
 - [ ] disclaimer
 - *Features*
 	- [ ] OCR capability for unreadable PDFs
-	- [ ] extract text from docx and txt files
+	- [ ] extract text from docx files
+	- [ ] save output to pdf
+	- [ ] POS parsing
 - *Bug fixes*
-	- *None*
+	- [ ] handle error when query does not produce any matches
