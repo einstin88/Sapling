@@ -3,14 +3,15 @@
 - *Provide intelligent answers based on your given reading materials*
 - Intended for journal articles, but can also be used for any text files such as pdf of textbook chapters or e-book
 
-### Features
+## Features
 - search keywords across multiple documents and return the 5 most relevant sentences
 
-*Returned sentences may not be full sentence. This will be fixed in future versions*
+*Notes*
+1. Returned sentences may not be full sentence. This will be fixed in future versions
 
 
-### How To's:
-1) **Installation and using Sapling for the first time**
+## How To's:
+1. **Installation and using Sapling for the first time**
 	
 	***Required***:
 	- 'Sapling' package
@@ -20,7 +21,7 @@
 	- latest Java runtime installed 
 		- Download for [any platform (recommended)](https://java.com/en/download/) OR [specific platform (advanced)](https://java.com/en/download/manual.jsp)
 
-2) (*MacOS*) **Copy the path of the directory that you want to load**
+2. (*MacOS*) **Copy the path of the directory that you want to load**
 	- ***Option 1:***
 		- [ ] to add descriptions and screenshots
 
