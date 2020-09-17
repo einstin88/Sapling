@@ -1,5 +1,5 @@
 # Sapling 
-- current release: '<v0.1>'
+- current release: `v0.1`
 - *Provide intelligent answers based on your given reading materials*
 - Intended for journal articles, but can also be used for any text files such as pdf of textbook chapters or e-book
 
