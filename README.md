@@ -54,17 +54,18 @@
 - [x] changelog
 - [ ] disclaimer
 
-### Future improvements:
+### Further improvements:
 - *Features*
 	- [ ] ability to change the number of results returned
-	- [ ] handles situation when query has no result
-	- [ ] tidier preprocessing
-	- [ ] UI
+	- [ ] test accuracy of the tf-idf algorithm (possibly compare with alternative such as: SpaCy library, topic modelling, or POS tagging to identify contexts)
+	- [ ] tidier preprocessing with XML and regex
+	- [ ] text based UI??
 	- [ ] OCR capability for unreadable PDFs
 	- [ ] extract text from docx files
 	- [ ] save output to pdf
 	- [ ] POS parsing
 	- [ ] handles different types of questions differently. eg. how/why/what questions
 	- [ ] host the scirpt in the cloud for web based deployment
+
 - *Bug fixes*
-	- [ ] handle error when query does not produce any matches
+	- [ ] handle error when query has no matches

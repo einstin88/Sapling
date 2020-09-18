@@ -6,8 +6,8 @@ Created on Fri Sep 11 12:22:07 2020
 """
 
 from colored import fg, bg, attr, style
-from nltk.tokenize import sent_tokenize
 import os
+# Note: some imports are delayed to reduce load on active memory
 
 ### Global vars
 VERSION = 0.1
@@ -23,7 +23,6 @@ CLR_SOFT_WARN = fg(1)
 C_RESET = style.RESET
 
 
-# TODO adjust control flows with numbered options in subroutine function
 def main():
 
     print_title()
@@ -38,7 +37,9 @@ def main():
         # Get query
         query = subroutines(3)
         # Process query
-        sent_tokens.update(subroutines(4, q=query, f=files, f_words=file_words, f_idfs=file_idfs))
+        sent_tokens = subroutines(4, q=query, f=files, f_words=file_words, f_idfs=file_idfs)
+        # For future implementation - saving data to user's system
+        # sent_tokens.update(subroutines(4, q=query, f=files, f_words=file_words, f_idfs=file_idfs))
 
         # Handle repeat query
         choice = process_options('main_0')
@@ -49,6 +50,39 @@ def main():
 
 
 def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
+    '''
+    Handle the flow of the program in a neat way
+    Current version contains 4 blocks of code (sub-routines)
+
+    Parameters
+    ----------
+    sel : int()
+        A number representing the execution sequence.
+
+    q : set(), optional
+        Query words from user.
+
+    f : dict(), optional
+        keys    --> filename
+        values  --> text-strings loaded from directory
+
+    f_words : dict(), optional
+        keys    --> filenames
+        values  --> word tokens from the loaded text-strings
+
+    f_idfs : dict(), optional
+        keys    --> word tokens
+        values  --> idf score of each word based on given corpus
+
+    f_list : dict(), optional
+        keys    --> the type of file extension
+        values  --> paths to all located files with the same extension
+
+    Returns
+    -------
+    Depends on which block of code (sub-routine) is executed
+
+    '''
 
     # Get and handle directory from user
     if sel == 1:
@@ -107,6 +141,8 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
 
     # Process query and print results
     if sel == 4:
+        from nltk.tokenize import sent_tokenize
+
         # Determine top file matches according to TF-IDF
         filenames = top_files(q, f_words, f_idfs, n=FILE_MATCHES)
         
@@ -129,7 +165,6 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
         # Determine top sentence matches
         matches = top_sentences(q, sentences, idfs, n=SENTENCE_MATCHES)
         for i, match in enumerate(matches):
-            #TODO - display filename of the sentence, highlight query words
             for file in filenames:
                 if match in sent_tkn_files[file]:
                     text = f''
@@ -142,18 +177,22 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
                     print(f'{text:<5}\n')
                     break
 
+        # For future implementation - saving data to user's system
         return sent_tkn_files
 
 
 def print_title():
     '''
-    Display start up information - version, usage, link to instructions
+    Display start up information 
+    - version, program logo, link to instructions
+    - program logo is randomly selected during each start up
     '''
     import random
 
+    # Logo folder has to be in the same folder as this code file. Otherwise there will be error.
     path = os.path.abspath('logo')
     file = random.choice(os.listdir(path))
-    default = f'Welcome, you are using v{VERSION} of'
+    default = f'You are using v{VERSION} of'
     end_quote = ['For instructions, tutorials or latest updates, please visit',
                  'https://github.com/einstin88/Sapling/blob/master/README.md']
     min_length = max(len(i) for i in end_quote)
@@ -162,13 +201,14 @@ def print_title():
         logo = f.read().splitlines()
         length = len(logo[0])
 
+        # Formatting for displaying program title
         if length > min_length:
             min_length = length
             logo_offset = 0
         else:
             logo_offset = (min_length - length)//2 - 1
 
-        ## Output Section
+        ## Display our logo and message
         print()
         print('*' * min_length)
         print(' '* ((min_length - len(default))//2 -1), default)
@@ -181,8 +221,22 @@ def print_title():
 
 
 def process_options(caller):
-    optns = ['1', '2']
+    '''
+    Handle the display and validation of options given by user
 
+    Parameters
+    ----------
+    caller : string
+        Caller is a 'code'.that is assigned based on which function calls for options to be processed
+        The code is to match a 'key' in the OPTIONS dict() below.
+
+    Returns
+    -------
+    bool
+        Return appropriate value to caller.
+
+    '''
+    # Store the messages to be printed. Value 1 always return True to the caller.
     OPTIONS = {
         'get_directory_0': {
             '1': '[1] Would you like to choose another directory,',
@@ -202,11 +256,12 @@ def process_options(caller):
             }
     }
 
-    for option in optns:
+    for option in ['1', '2']:
         print(OPTIONS[caller][option])
 
+    # Get and validate user input
     while True:
-        sel = input('{CLR_UI}Please enter you numeric choice:{C_RESET} ')
+        sel = input(f'{CLR_UI}Please enter you numeric choice:{C_RESET} ')
 
         if sel == '1':
             return True
@@ -233,7 +288,7 @@ def get_directory():
         if directory[0] == '\'':
             directory = directory[1:-1]
     
-        # Check if valid input is given
+        # Check if valid path is given
         if os.path.exists(directory):
             if os.path.isdir(directory):
                 file_list = os.listdir(directory)
@@ -244,6 +299,7 @@ def get_directory():
             print(f'\n{CLR_WARN}Oops!! Error: \'{directory}\' not found!{C_RESET}')
             return
     
+        # At least 2 files are required for TF-IDF algorithm to work properly
         if len(file_list) == 1:
             print(f'\n{CLR_SOFT_WARN}Warning: you have only provided one file. Query results may be inaccurate.{C_RESET}')
             choice = process_options('get_directory_0')
@@ -255,7 +311,7 @@ def get_directory():
         else:
             break
 
-    # Check if path contains valid file
+    # Check if path contains compatible file
     valid_files = dict()
     counter = 1
 
@@ -286,11 +342,13 @@ def get_directory():
 
 def load_data(file_list):
     '''
+    Load and process files into program's memory space by calling load_pdf() or load_texts()
+
     Parameters
     ----------
     file_list : dict()
         Keys    --> File type
-        Values  --> list of files to load into memory
+        Values  --> list of filepaths to load into memory
 
     Returns
     -------
@@ -315,10 +373,13 @@ def load_data(file_list):
 
 def load_pdf(file_sublist):
     '''
+    Handles the opening and preprocessing of pdf files
+    Limitation: OCR not implemented in this version
+
     Parameters
     ----------
     file_sublist : list
-        Full paths to pdfs found from the given directory.
+        Full paths to pdfs found from the user-given directory.
 
     Returns
     -------
@@ -349,7 +410,7 @@ def load_pdf(file_sublist):
         file_name = os.path.basename(file_path)
 
         ### Check if texts in file are parsable
-        # Determine number of pages with large amt of unmapped chars
+        # Determine number of pages with large amt of unmapped chars = file's texts mapping is corrupted
         umc = sum(True for i in parsed_file[tp[0]][tp[2]] if int(i) > 250)
 
         # Determine number of pages with 0 char = pages are images
@@ -365,7 +426,7 @@ def load_pdf(file_sublist):
             print(f'{counter}: Successfully loaded \'{file_name}\'')
             counter +=1
 
-        ### Attempt to filter out references
+        ### Attempt to filter out references section
         # A list of number of chars for each page
         char_counts = parsed_file[tp[0]][tp[1]]
 
@@ -388,7 +449,8 @@ def load_pdf(file_sublist):
             print('Could not find or No (CLR_SOFT_WARN}reference{C_RESET} section')
             raw = parsed_file[tp[3]]
 
-        ### Attempt to detect 'title page' by it's char count
+        ### Attempt to detect 'title page' by comparing char count on the first
+        ### page with the rest of the document
         avg_word_count = sum(int(i) for i in char_counts) / n_pages
 
         # Char count of the first page
@@ -404,7 +466,11 @@ def load_pdf(file_sublist):
             files[file_name] = raw.replace('\n', ' ')
 
     if len(err_files) > 0:
-        print('Sorry, texts in the following file(s) are not parsable: ')
+        print('Sorry, text' +
+              ('s ' if len(err_files) > 1 else ' ') +
+               'in the following file' +
+               ('s are ' if len(err_files) > 1 else ' is ') +
+               'not parsable: ')
         for i, file in enumerate(err_files):
             print(f'{i+1}. {file}')
         print()
@@ -424,6 +490,20 @@ def load_docs(file_sublist):
     return files
 
 def load_texts(file_sublist):
+    '''
+    Load .txt files
+
+    Parameters
+    ----------
+    file_sublist : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    files : TYPE
+        DESCRIPTION.
+
+    '''
     files = dict()
 
     print('Loading texts.....')
@@ -583,6 +663,14 @@ def top_sentences(query, sentences, idfs, n):
 
 
 def terminate():
+    '''
+    Exit point for the program
+
+    Returns
+    -------
+    None.
+
+    '''
     import sys
 
     print(f'{CLR_SYS}Thank you for using Sapling. For feedbacks or issues, please contact me at pelie_888888@hotmail.com{C_RESET}')
