@@ -62,6 +62,7 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
                 else:
                     terminate()
 
+            print()
             if flag_d:
                 print(f'{sum(len(file_list[k]) for k in file_list)} compatible file(s) found.\n')
                 return file_list
@@ -150,9 +151,9 @@ def print_title():
     '''
     import random
 
-    path = os.path.abspath('ascii_title')
+    path = os.path.abspath('logo')
     file = random.choice(os.listdir(path))
-    default = f'You are using v{VERSION} of'
+    default = f'Welcome, you are using v{VERSION} of'
     end_quote = ['For instructions, tutorials or latest updates, please visit',
                  'https://github.com/einstin88/Sapling/blob/master/README.md']
     min_length = max(len(i) for i in end_quote)
@@ -205,7 +206,7 @@ def process_options(caller):
         print(OPTIONS[caller][option])
 
     while True:
-        sel = input('Your choice: ')
+        sel = input('{CLR_UI}Please enter you numeric choice:{C_RESET} ')
 
         if sel == '1':
             return True
@@ -227,7 +228,7 @@ def get_directory():
     valid_extensions = ['.pdf', '.txt'] # '.docx' not implemented in this version
 
     while True:
-        directory = input(f'{CLR_UI}Which folder do you want to load files from?{C_RESET}\n[Please provide full path of your folder].\n')
+        directory = input(f'{CLR_UI}Which folder do you want to load files from?{C_RESET}\n[Please provide full path of your folder]\n')
         # Correct input format when path was given by user using drag and drop
         if directory[0] == '\'':
             directory = directory[1:-1]
