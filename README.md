@@ -27,6 +27,8 @@
 
 	- ***Option 2:***
 
+## FAQ
+1. What it means by texts are not parsable?
 
 ### version history
 - v0.1 alpha testing, initial release
@@ -44,6 +46,9 @@
 - [ ] disclaimer
 - *Features*
 	- [ ] ability to change the number of results returned
+	- [ ] handles situation when query has no result
+	- [ ] tidier preprocessing
+	- [ ] UI
 	- [ ] OCR capability for unreadable PDFs
 	- [ ] extract text from docx files
 	- [ ] save output to pdf
