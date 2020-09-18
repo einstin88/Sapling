@@ -13,9 +13,7 @@
 
 
 ## How To's:
-1. **Installation and using Sapling for the first time**
-	
-	***Required***:
+1. **Installation and using Sapling for the first time**	
 	- Download 'Sapling' for [Windows]() [Mac]()
 		- [ ] post links once program is completed and compiled
 
@@ -40,7 +38,7 @@
 2. Why am I getting `server response error`?
 
 ### version history
-- v0.1 alpha testing, initial release
+- v0.1 [end-Sep-2020] - alpha testing + initial release
 	- *features available*
 		1. Extract texts from PDFs
 		2. Return 5 top matching sentences to your query
