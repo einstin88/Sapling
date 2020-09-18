@@ -56,7 +56,7 @@
 - *Features*
 	- [ ] ability to change the number of results returned
 	- [ ] test accuracy of the tf-idf algorithm (possibly compare with alternative such as: SpaCy library, topic modelling, or POS tagging to identify contexts)
-	- [ ] tidier preprocessing with XML and regex
+	- [ ] tidier preprocessing with XML and regex - the current hurdle is to be able to segment paragraphs (and therefore sentences) accurately
 	- [ ] text based UI??
 	- [ ] OCR capability for unreadable PDFs
 	- [ ] extract text from docx files
