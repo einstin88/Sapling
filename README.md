@@ -1,3 +1,5 @@
+** this is just a rough outline, most of the contents are still work in progress**
+
 # Sapling 
 - current release: `v0.1`
 - *Provide intelligent answers based on your given reading materials*
@@ -14,8 +16,7 @@
 1. **Installation and using Sapling for the first time**
 	
 	***Required***:
-	- 'Sapling' package
-		- [Windows]() [Mac]()
+	- Download 'Sapling' for [Windows]() [Mac]()
 		- [ ] post links once program is completed and compiled
 
 	- latest Java runtime installed 
@@ -27,8 +28,12 @@
 
 	- ***Option 2:***
 
+3. **Run python script in your local environment**
+	- 
+
 ## FAQ
 1. What it means by texts are not parsable?
+2. Why am I getting `server response error`?
 
 ### version history
 - v0.1 alpha testing, initial release
@@ -37,13 +42,15 @@
 		2. Return 5 top matching sentences to your query
 
 
-### Future improvements:
+### Todo for readme
 - [ ] installation instructions & requirements
 - [ ] compatible file types
 - [ ] features demonstration
 - [ ] create link to form for feedback or issue reporting 
 - [x] changelog
 - [ ] disclaimer
+
+### Future improvements:
 - *Features*
 	- [ ] ability to change the number of results returned
 	- [ ] handles situation when query has no result
