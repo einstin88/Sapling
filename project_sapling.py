@@ -13,13 +13,14 @@ import os
 VERSION = 0.1
 FILE_MATCHES = 5
 SENTENCE_MATCHES = 5
+W_SP = f'{chr(32):<3}' # white space formatting for displaying results
 
 ### Color schemes
 CLR_SYS = bg(9) # Color for displaying high level msg
 CLR_FILE = fg(12) # Color for displaying compatible files
 CLR_UI = fg(46) # Color for displaying user interactions
-CLR_WARN = bg(11) + fg(1) + attr(1)
-CLR_SOFT_WARN = fg(1)
+CLR_WARN = bg(11) + fg(1) + attr(1) # Color for displaying serious errors
+CLR_SOFT_WARN = fg(1) # Color for displaying warnings
 C_RESET = style.RESET
 
 
@@ -174,7 +175,7 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
                         else:
                             text += f'{word} '
                     print(f'{i+1}. {file}')
-                    print(f'{text:<5}\n')
+                    print(f'{W_SP}{text}\n')
                     break
 
         # For future implementation - saving data to user's system
@@ -190,7 +191,13 @@ def print_title():
     import random
 
     # Logo folder has to be in the same folder as this code file. Otherwise there will be error.
-    path = os.path.abspath('logo')
+    # Ref: https://stackoverflow.com/questions/51060894/adding-a-data-file-in-pyinstaller-using-the-onefile-option
+    try:
+        import sys
+        path = sys._MEIPASS + os.sep + 'logo'
+    except:
+        path = os.path.abspath('logo')
+
     file = random.choice(os.listdir(path))
     default = f'You are using v{VERSION} of'
     end_quote = ['For instructions, tutorials or latest updates, please visit',
@@ -211,7 +218,7 @@ def print_title():
         ## Display our logo and message
         print()
         print('*' * min_length)
-        print(' '* ((min_length - len(default))//2 -1), default)
+        print(' ' *((min_length - len(default))//2 -1), default)
         for line in logo:
             print(' ' * logo_offset, line)
         print()
@@ -409,7 +416,7 @@ def load_pdf(file_sublist):
 
         file_name = os.path.basename(file_path)
 
-        ### Check if texts in file are parsable
+        ### Check if texts in file are parsable - implemented through umc and nc
         # Determine number of pages with large amt of unmapped chars = file's texts mapping is corrupted
         umc = sum(True for i in parsed_file[tp[0]][tp[2]] if int(i) > 250)
 
@@ -436,7 +443,7 @@ def load_pdf(file_sublist):
         ending = parsed_file[tp[3]][-ends:]
         for ef in end_filters:
             if ef in ending:
-                print(f'Found {CLR_FILE}\'{ef}\'{C_RESET} section')
+                print(f'{W_SP}Found {CLR_FILE}\'{ef}\'{C_RESET} section')
                 ind_ref = len(ending) - ending.find(ef)
                 raw = parsed_file[tp[3]][:-ind_ref]
                 break
@@ -446,7 +453,7 @@ def load_pdf(file_sublist):
             if len(raw) > 0:
                 pass
         except UnboundLocalError:
-            print('Could not find or No (CLR_SOFT_WARN}reference{C_RESET} section')
+            print(f'{W_SP}Could not find or No {CLR_SOFT_WARN}reference{C_RESET} section')
             raw = parsed_file[tp[3]]
 
         ### Attempt to detect 'title page' by comparing char count on the first
@@ -457,20 +464,18 @@ def load_pdf(file_sublist):
         n = int(char_counts[0])
 
         if n < avg_word_count:
-            print(f'Found {CLR_FILE}title{C_RESET} page \n')
+            print(f'{W_SP}Found {CLR_FILE}title{C_RESET} page \n')
             raw = raw[n:].replace('-\n', '')
             files[file_name] = raw.replace('\n', ' ')
         else:
-            print(f'Could not find or No {CLR_SOFT_WARN}title{C_RESET} page \n')
+            print(f'{W_SP}Could not find or No {CLR_SOFT_WARN}title{C_RESET} page \n')
             raw = raw.replace('-\n', '')
             files[file_name] = raw.replace('\n', ' ')
 
     if len(err_files) > 0:
-        print('Sorry, text' +
-              ('s ' if len(err_files) > 1 else ' ') +
+        print('Sorry, text' + ('s ' if len(err_files) > 1 else ' ') +
                'in the following file' +
-               ('s are ' if len(err_files) > 1 else ' is ') +
-               'not parsable: ')
+               ('s are ' if len(err_files) > 1 else ' is ') + 'not parsable: ')
         for i, file in enumerate(err_files):
             print(f'{i+1}. {file}')
         print()
@@ -673,6 +678,7 @@ def terminate():
     '''
     import sys
 
+    # TODO - Message to be replaced with link to Google Form 
     print(f'{CLR_SYS}Thank you for using Sapling. For feedbacks or issues, please contact me at pelie_888888@hotmail.com{C_RESET}')
     print('Goodbye!')
     sys.exit()
