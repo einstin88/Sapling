@@ -1,8 +1,8 @@
-**this is just a rough outline, most of the contents are still work in progress**
+**\*NOTE: this is just a rough outline, most of the contents are still work in progress**
 
 # Sapling 
 - current release: `v0.1`
-- *Provide intelligent answers based on your given reading materials*
+- *Provide intelligent answers based on your given reading materials???*
 - Intended for journal articles, but can also be used for any text files such as pdf of textbook chapters or e-book
 
 ## Features
@@ -46,7 +46,7 @@
 		2. Return 5 top matching sentences to your query
 
 
-### Todo for readme
+### To-do for this readme
 - [ ] installation instructions & requirements
 - [ ] compatible file types
 - [ ] features demonstration
