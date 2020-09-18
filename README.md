@@ -1,4 +1,4 @@
-** this is just a rough outline, most of the contents are still work in progress**
+**this is just a rough outline, most of the contents are still work in progress**
 
 # Sapling 
 - current release: `v0.1`
@@ -29,7 +29,11 @@
 	- ***Option 2:***
 
 3. **Run python script in your local environment**
-	- 
+	- install required libraries using following command
+	```
+	pip install -r requirements.txt
+	```
+	- run the main `.py` file
 
 ## FAQ
 1. What it means by texts are not parsable?
