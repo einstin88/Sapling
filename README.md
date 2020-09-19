@@ -35,7 +35,7 @@
 
 ## FAQ
 1. What it means by texts are not parsable?
-2. Why am I getting `server response error`?
+2. Why am I getting `failed to see startup message` error?
 
 ### version history
 - v0.1 [end-Sep-2020] - alpha testing + initial release

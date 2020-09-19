@@ -37,9 +37,10 @@ def main():
     while True:
         # Get query
         query = subroutines(3)
-        # Process query
+        
+        ### Process query - this is the bones (or main cognitive ability) of the program! 
         sent_tokens = subroutines(4, q=query, f=files, f_words=file_words, f_idfs=file_idfs)
-        # For future implementation - saving data to user's system
+        # TODO - For future implementation - saving data to user's system
         # sent_tokens.update(subroutines(4, q=query, f=files, f_words=file_words, f_idfs=file_idfs))
 
         # Handle repeat query
@@ -99,10 +100,14 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
 
             print()
             if flag_d:
-                print(f'{sum(len(file_list[k]) for k in file_list)} compatible file(s) found.\n')
+                tot = sum(len(file_list[k]) for k in file_list)
+                print(f'{CLR_SYS}Aha! Sapling\'s stolen {tot} compatible file' +
+                    ('s ' if tot > 1 else ' ') + f'from the folder. Just kidding, its still there! I swear!{C_RESET}\n')
+                if tot > 10:
+                    print(f'{CLR_UI}OH Sweet Jesus, that\'s a lot of readings you have to do.\nYou know I\'ve been through a lot too. On a positive note though, knowledge is power!{C_RESET}\n')
                 return file_list
             else:
-                print('Sorry, no compatible files found :(\n')
+                print(f'{CLR_SOFT_WARN}Sorry human, no compatible files found in that folder :({C_RESET}\n')
                 choice = process_options('sub1_0')
                 if choice:
                     continue
@@ -128,12 +133,12 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
     if sel == 3:
         while True:
             # Get user query
-            query = set(tokenize(input("What do you want to search for: ")))
+            query = set(tokenize(input(f"{CLR_UI}Tell me, what does this erudite human want to search for:{C_RESET} ")))
             if len(query) > 0:
-                print('Processing your query...')
+                print('Gotcha, time for Sapling to do some intellectual magic behind the scenes...')
                 return query
             else:
-                print(f'{CLR_SOFT_WARN}You did not enter any query{C_RESET}')
+                print(f'{CLR_SOFT_WARN}Why don\'t you trust Sapling, you did not actually provide any query for me =< {C_RESET}')
                 choice = process_options('sub3_0')
                 if choice:
                     terminate()
@@ -144,9 +149,13 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
     if sel == 4:
         from nltk.tokenize import sent_tokenize
 
+        print(f'{CLR_UI}Please bare with me for a few moments while I speed read through all the documents you fed me with...')
         # Determine top file matches according to TF-IDF
         filenames = top_files(q, f_words, f_idfs, n=FILE_MATCHES)
         
+        if len(filenames) > 0:
+            print(f'I may be younger than you, but... Okay~ Think I\'ve got something... Hmm, just need to figure out...')
+
         # Extract sentences from top files
         sentences = dict()
         sent_tkn_files = dict()
@@ -165,6 +174,8 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
         
         # Determine top sentence matches
         matches = top_sentences(q, sentences, idfs, n=SENTENCE_MATCHES)
+        if len(matches) > 0:
+            print(f'{CLR_SYS}Sapling thinks these are the most relevant to what you told me to look for.{C_RESET}')
         for i, match in enumerate(matches):
             for file in filenames:
                 if match in sent_tkn_files[file]:
@@ -178,7 +189,7 @@ def subroutines(sel, q=None, f=None, f_words=None, f_idfs=None, f_list=None):
                     print(f'{W_SP}{text}\n')
                     break
 
-        # For future implementation - saving data to user's system
+        # TODO - For future implementation - saving data to user's system
         return sent_tkn_files
 
 
@@ -199,7 +210,7 @@ def print_title():
         path = os.path.abspath('logo')
 
     file = random.choice(os.listdir(path))
-    default = f'You are using v{VERSION} of'
+    default = f'Hey there! This is Sapling v.{VERSION}.\nIt\'s so nice to meet you!'
     end_quote = ['For instructions, tutorials or latest updates, please visit',
                  'https://github.com/einstin88/Sapling/blob/master/README.md']
     min_length = max(len(i) for i in end_quote)
@@ -246,11 +257,11 @@ def process_options(caller):
     # Store the messages to be printed. Value 1 always return True to the caller.
     OPTIONS = {
         'get_directory_0': {
-            '1': '[1] Would you like to choose another directory,',
+            '1': '[1] Would you like to choose another directory instead,',
             '2': '[2] or proceed?'
             },
         'main_0': {
-            '1': '[1] Do you want to make another query,',
+            '1': '[1] Would you like Sapling to look for something else,',
             '2': '[2] or quit program'
             },
         'sub1_0': {
@@ -259,7 +270,7 @@ def process_options(caller):
             },
         'sub3_0': {
             '1': '[1] Do you want to quit program,',
-            '2': '[2] or provide a query'
+            '2': '[2] or provide Sapling a query'
             }
     }
 
@@ -268,7 +279,7 @@ def process_options(caller):
 
     # Get and validate user input
     while True:
-        sel = input(f'{CLR_UI}Please enter you numeric choice:{C_RESET} ')
+        sel = input(f'{CLR_UI}Please enter your numeric choice:{C_RESET} ')
 
         if sel == '1':
             return True
@@ -277,7 +288,7 @@ def process_options(caller):
         elif sel == 'quit':
             terminate()
         else:
-            print(f'{CLR_WARN}Invalid option. Please provide a valid option!{C_RESET}\n')
+            print(f'{CLR_WARN}Wait a minute, that\'s not a valid option! @#$%& !! {C_RESET}\n')
 
 
 def get_directory():
@@ -290,7 +301,7 @@ def get_directory():
     valid_extensions = ['.pdf', '.txt'] # '.docx' not implemented in this version
 
     while True:
-        directory = input(f'{CLR_UI}Which folder do you want to load files from?{C_RESET}\n[Please provide full path of your folder]\n')
+        directory = input(f'{CLR_UI}Where should Sapling look for the files?{C_RESET}\n[Please provide full path of your folder]\n')
         # Correct input format when path was given by user using drag and drop
         if directory[0] == '\'':
             directory = directory[1:-1]
@@ -308,7 +319,7 @@ def get_directory():
     
         # At least 2 files are required for TF-IDF algorithm to work properly
         if len(file_list) == 1:
-            print(f'\n{CLR_SOFT_WARN}Warning: you have only provided one file. Query results may be inaccurate.{C_RESET}')
+            print(f'\n{CLR_SOFT_WARN}Seems like you\'ve only provided one file. Sapling works better with more given files, so I cannot guarantee accurate results here.{C_RESET}')
             choice = process_options('get_directory_0')
     
             if choice:
@@ -344,7 +355,7 @@ def get_directory():
     if len(valid_files) > 0:
             directory_found = True
 
-    return (directory_found, valid_files)
+    return directory_found, valid_files
 
 
 def load_data(file_list):
@@ -403,7 +414,7 @@ def load_pdf(file_sublist):
           'content', 'xmpTPg:NPages']
     end_filters = ['References', 'REFERENCES', 'Bibliography', 'BIBLIOGRAPHY']
 
-    print('Loading pdfs....')
+    print('Loading those pdfs....')
     counter = 1
     for file_path in file_sublist:
         #TODO Implement XML parsing and regex processing
@@ -441,6 +452,7 @@ def load_pdf(file_sublist):
         ends = int(0.75* n_pages) -1
         ends = sum(int(char_counts[j]) for j in range(ends, n_pages))
         ending = parsed_file[tp[3]][-ends:]
+        raw = ''
         for ef in end_filters:
             if ef in ending:
                 print(f'{W_SP}Found {CLR_FILE}\'{ef}\'{C_RESET} section')
@@ -449,10 +461,9 @@ def load_pdf(file_sublist):
                 break
 
         # Could not find keyword
-        try:
-            if len(raw) > 0:
+        if raw != '':
                 pass
-        except UnboundLocalError:
+        else:
             print(f'{W_SP}Could not find or No {CLR_SOFT_WARN}reference{C_RESET} section')
             raw = parsed_file[tp[3]]
 
@@ -485,7 +496,7 @@ def load_pdf(file_sublist):
 
 def load_docs(file_sublist):
     #from docx import Document
-
+    # docx file not implemented in this version
     files = dict()
 
     print('Loading docx\'s.....')
@@ -511,7 +522,7 @@ def load_texts(file_sublist):
     '''
     files = dict()
 
-    print('Loading texts.....')
+    print('Loading them texts.....')
     for file_path in file_sublist:
         with open(file_path, encoding='utf-8') as f:
             files[os.path.basename(file_path)] = f.read()
@@ -611,7 +622,10 @@ def top_files(query, files, idfs, n):
                                   key=lambda i: i[1], reverse=True)]
 
     # Slice n-elements from the ranked list and return it
-    return ranked[:n]
+    if n < len(ranked):
+        return ranked[:n]
+    else:
+        return ranked
 
 
 def top_sentences(query, sentences, idfs, n):
