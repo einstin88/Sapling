@@ -3,6 +3,12 @@
 Created on Mon Oct 12 01:26:38 2020
 
 @author: pelie
+
+Handles:
+
+- Getting user queries
+- Processing user queries
+
 """
 
 print('Loading query processing module...')
@@ -38,8 +44,6 @@ class QueryContainer(object):
     """
     def __init__(self):
         super(QueryContainer, self).__init__()
-        self.get_query()
-
         self.query = []
         self.query_tokens = []
         self.topfiles = []
@@ -47,6 +51,7 @@ class QueryContainer(object):
 
         self.matches = dict() # Store results
         self.num_matches = config.SENTENCE_MATCHES
+
 
     def __len__(self):
         return len(self.query)
@@ -71,6 +76,7 @@ class QueryContainer(object):
             'default': 'twmkn9/albert-base-v2-squad2'
             }
 
+        print('Loading brain power...')
         modelDir = os.path.join('cfg', 'nlp')
         tokPath = os.path.join(modelDir, 'tokenizer')
         modPath = os.path.join(modelDir, 'model')
@@ -79,6 +85,7 @@ class QueryContainer(object):
 		# so when directory is not found, model is not downloaded yet
         # https://huggingface.co/transformers/main_classes/model.html#pretrainedmodel
         if not os.path.exists(modelDir):
+            print('Wait, I have to download my neural network (aka brain). Please ensure you are connected to the internet...')
             self.tokenizer = AlbertTokenizer.from_pretrained(model_options['default'])
             self.tokenizer.save_pretrained(tokPath)
 
@@ -89,23 +96,24 @@ class QueryContainer(object):
             self.tokenizer = AlbertTokenizer.from_pretrained(tokPath)
             self.model = AlbertForQuestionAnswering.from_pretrained(modPath, return_dict=True)
 
-        self.max_length = self.model.config.max_position_embeddings
+        print('Loaded a big brain!\n')
+        self.max_length = self.model.config.max_position_embeddings - 5
 
 
     def get_query(self):
 
         while True:
             # Get user query
-            query = input(f"{CLR_UI}Tell me, what is the question this human have?{C_RESET}\n")
+            query = input(f"{CLR_UI}So, what question does this human like Sapling to answer?{C_RESET}\n")
             query_tokens = set(tokenize(query))
 
-            if 1 < len(query_tokens) <= 50:
+            if 2 < len(query_tokens) <= 50:
                 print('Gotcha...')
                 self.add_query(query, query_tokens)
                 break
 
             elif len(query_tokens) > 50:
-                print('(Warning) Your query is longer than 512 words, it may produce inaccurate result')
+                print('(Warning) Your query is very long, it may produce inaccurate result')
                 self.add_query(query, query_tokens)
                 break
 
@@ -116,7 +124,7 @@ class QueryContainer(object):
                     'logic': Default_logic
                     }
 
-                print(f'{CLR_SOFT_WARN}Why don\'t you trust Sapling, you did not actually provide any query for me =< {C_RESET}\n')
+                print(f'{CLR_SOFT_WARN}Why don\'t you trust Sapling, you did not actually provide any proper query for me =< {C_RESET}\n')
                 choice = utils.process_options(options)
                 if choice:
                     utils.terminate()
@@ -153,45 +161,49 @@ class QueryContainer(object):
             break
 
         ### Load transformers model for answer search ###
-        print(f'{CLR_UI}Please bare with me for a few moments while I take a closer look...')
+        print(f'{CLR_UI}Please bare with me for a few moments while I take a closer look...{C_RESET}')
         self.set_transformers_env()
 
         query = self.query[-1]
-        query_length = self.tokenizer(query, add_special_tokens=True, return_tensors="pt")
-        query_length = len(query_length['input_ids'].tolist()[0])
+        query_len = self.tokenizer(query, add_special_tokens=True, return_tensors="pt")
+        query_len = len(query_len['input_ids'].tolist()[0])
 
         for filename in filenames:
-            for passage in tqdm(pdfobj.passages[filename]):
-                self.get_prediction(query, query_length, passage, filename)
+            for pssg in tqdm(pdfobj.passages[filename]):
+                self.get_prediction(query, query_len, pssg, filename)
 
         ### Display results ####
-        if min(self.matches.keys()) > 15:
-            print('Sapling found a few matches, but they are somewhat inaccurate...\n')
+        print(f'\n\nHere\'s your query again -> {query}')
+        if min(self.matches.keys()) > 0.5:
+            print(f'{CLR_SOFT_WARN}Sapling found a few matches, but they are somewhat inaccurate...{C_RESET}\n')
         else:
-            print('Sapling thinks these are the closest answers to your question!\n')
+            print(f'{CLR_UI}Sapling thinks these are the closest answers to your question!{C_RESET}\n')
+        config.Delay
 
         scores = []
         for i, loss_val in enumerate(sorted(self.matches.keys())):
             scores.append(loss_val)
-            print(f'{i+1}. ', self.matches[loss_val]['file'])
-            print('Match:\n', self.matches[loss_val]['answer'], '\n')
-            print('In:\n', self.matches[loss_val]['context'], '\n\n')
+            print(f'{CLR_FILE}{i+1}. ', self.matches[loss_val]['file'],
+                  f'{C_RESET}(Confidence: {(1 - loss_val):.{2}%})')
+            print(f'Match:\n{CLR_SYS}', self.matches[loss_val]['answer'], f'{C_RESET}\n')
+            print('In the passage:\n', self.matches[loss_val]['context'], '\n\n')
 
         ### Get feedback ###
 		# TODO - store this feedback
+        print('Sapling would like to hear your feedback...')
         options_0 = {
-            '1': '[1] Did Sapling found the right answer for you?',
+            '1': '[1] So, did I found the right answer for you?',
             '2': '[2] or not?',
             'logic': Default_logic
             }
         choice = utils.process_options(options_0)
         if choice:
             options_1 = {
-                '1': f'Which one is the closest? (from results: 1 - {self.num_matches})',
+                '1': f'Which one is the closest? [from results: 1 - {self.num_matches}]',
                 'logic': [1, 2, 3, 4, 5]
                 }
             file_num = utils.process_options(options_1)
-            print('Thank you for the feedback! 😉\n')
+            print(f'{CLR_UI}Thank you for the feedback! ;) {C_RESET}\n')
             self.results = {
                 'question': query,
                 'answer': self.matches[scores[file_num - 1]]['answer'],
@@ -199,10 +211,10 @@ class QueryContainer(object):
                 }
             config.Pause
             # TODO - For future implementation - saving data to user's system
-            return os.path.join(dirobj.directory, self.matches[scores[file_num - 1]]['filename'])
+            return os.path.join(dirobj.directory, self.matches[scores[file_num - 1]]['file'])
 
         else:
-            print("Sorry ☹ I'll try to do better next time...\n")
+            print("Sorry =( I'll try to do better next time...\n")
             config.Pause
             return False
 
@@ -210,63 +222,74 @@ class QueryContainer(object):
     def get_prediction(self, query, query_length, passage, filename):
         # https://huggingface.co/transformers/model_doc/albert.html#albertforquestionanswering
 
-        inputs = self.tokenizer(query, passage, add_special_tokens=True, return_tensors='pt')
+        inputs = self.tokenizer(query, passage, add_special_tokens=True, return_tensors='pt', verbose=False)
         input_ids = inputs["input_ids"].tolist()[0]
 
-        if len(input_ids) <= self.max_length:
-            # Get labels of start and end of prediction
-            output = self.model(**inputs)
-            start_position = argmax(output['start_logits']).unsqueeze(0)
-            end_position = argmax(output['end_logits']).unsqueeze(0)
-
-            # Get loss value
-            output = self.model(**inputs, start_positions=start_position, end_positions=end_position)
-            loss = output.loss.item()
-
-            ### Logic to save outputs ###
-            if len(self.matches) <= self.num_matches: # Populate results var
-                answer_start = argmax(output['start_logits'])
-                answer_end = argmax(output['end_logits']) + 1
-
-                self.matches[loss] = {
-                    'file' : filename,
-                    'answer': self.tokenizer.convert_tokens_to_string(
-                        self.tokenizer.convert_ids_to_tokens(
-                            input_ids[answer_start : answer_end])),
-                    'context': passage
-                    }
-
-            elif loss < max(self.matches.keys()): # Replace with better result
-                _ = self.matches.pop(max(self.matches.keys()))
-                self.matches[loss] = {
-                    'file' : filename,
-                    'answer': self.tokenizer.convert_tokens_to_string(
-                        self.tokenizer.convert_ids_to_tokens(
-                            input_ids[answer_start : answer_end])),
-                    'context': passage
-                    }
-
-        else:
-            # Split paragraph returns a generator item
+        if len(input_ids) > self.max_length:
             for context in self.split_paragraph(query_length, passage):
                 self.get_prediction(query, query_length, context, filename)
+            return
+
+        output = self.model(**inputs)
+
+        start_position = argmax(output['start_logits'])
+        end_position = argmax(output['end_logits'])
+
+        if start_position == end_position:
+            return
+
+        start_position = start_position.unsqueeze(0)
+        end_position = end_position.unsqueeze(0)
+
+        # Get loss value
+        output = self.model(**inputs, start_positions=start_position, end_positions=end_position)
+        loss = output.loss.item()
+
+        ### Logic to save outputs ###
+        # Populate results var
+        if len(self.matches) < self.num_matches:
+            pass
+
+        # Replace with better result
+        elif loss < max(self.matches.keys()):
+            _ = self.matches.pop(max(self.matches.keys()))
+
+        else:
+            return
+
+        answer_start = argmax(output['start_logits'])
+        answer_end = argmax(output['end_logits']) + 1
+
+        self.matches[loss] = {
+                    'file' : filename,
+                    'answer': self.tokenizer.convert_tokens_to_string(
+                        self.tokenizer.convert_ids_to_tokens(
+                            input_ids[answer_start : answer_end]
+                            )),
+                    'context': passage
+                    }
 
 
-    def split_paragraph(self, query_length, passage):
-
+    def split_paragraph(self, query_length, paragraph):
         split_passage = ''
+        length = 0
 
-        for sentence in sent_tokenize(passage):
+        for sentence in sent_tokenize(paragraph):
             tokens = self.tokenizer(sentence, add_special_tokens=True, return_tensors="pt")
             tokens = len(tokens['input_ids'].tolist()[0]) - 1
 
-            if tokens + query_length <= self.max_length:
+            if tokens + length + query_length <= self.max_length:
                 split_passage += (sentence + ' ')
+                length += tokens
+
             else:
+                # Return complete paragraph & reset counters
                 yield split_passage
                 split_passage = sentence
+                length = tokens
 
-        yield split_passage
+        if len(split_passage) > 0: # and split_passage not in splits:
+            yield split_passage
 
 
 def top_files(query, files, idfs, n):
@@ -281,7 +304,7 @@ def top_files(query, files, idfs, n):
 
     # Calculate tfidf for each search term for each file, then add the value
 	# to the score of the file
-    for word in tqdm(query):
+    for word in query:
         for filename in files:
             # Calculate tf
             c = Counter(files[filename])

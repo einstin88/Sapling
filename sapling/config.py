@@ -11,7 +11,7 @@ import os #, json
 from time import sleep
 
 # Machine settings
-WINDOWS = True if 'nt' in os.name else False
+#WINDOWS = True if 'nt' in os.name else False
 
 # User settings
 UserXhtml = False
@@ -24,6 +24,18 @@ Delay = sleep(5)
 Pause = sleep(3)
 
 
+def setup_folders():
+    #if not os.path.exists('cfg'):
+     #   os.mkdir('cfg')
+
+    jarDir = os.path.join('cfg', 'tika')
+    if not os.path.exists(jarDir):
+        os.makedirs(jarDir, exist_ok=True)
+
+setup_folders()
+
+
+'''
 class SaplingConfig(object):
 	"""
 	docstring for SaplingConfig
@@ -54,4 +66,4 @@ class SaplingConfig(object):
 
 	def pre_config(self):
 		pass
-		
+		'''

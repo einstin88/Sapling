@@ -5,6 +5,7 @@ Created on Wed Sep 30 03:41:47 2020
 @author: pelie
 
 Handles:
+
 - storing a directory in python container
 - processing and stroing PDFs into format usable by algorithm
 """
@@ -14,8 +15,13 @@ import os, re
 #import prettytable
 from io import StringIO
 from lxml.etree import HTMLParser, parse
+from string import punctuation
 from tika import tika, parser
 from tqdm import tqdm
+
+from nltk.corpus import stopwords
+from nltk.tokenize import wordpunct_tokenize
+from nltk.stem import WordNetLemmatizer
 
 # TODO - replace with spacy pipline
 from . import utils, config
@@ -29,12 +35,11 @@ class DirContainer(object):
     """docstring for DirContainer"""
     def __init__(self):
         super(DirContainer, self).__init__()
-        self.get_directory()
-
         self.valid_directory = False
         self.pdfs = []
         self.docs = []
         self.txts = []
+        self.get_directory()
  
     def __len__(self):
         return len(self.file_list)
@@ -92,6 +97,10 @@ class DirContainer(object):
                 choice = utils.process_options(options_1)    
                 if choice:
                     continue
+                else:
+                    break
+            else:
+                break
 
     def process_directory(self):
         '''
@@ -152,17 +161,18 @@ class PdfContainer(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, dirobj):
         super(PdfContainer, self).__init__()
-        # Store parsed texts & tokens
-        #self.data = pd.DataFrame(columns=['file_name', 'title', 'paragraphs', 'tokens', 'num_pages', 'headers', 'footers'])
-
-        self.passages = []
+        # Vars to store parsed texts & tokens
+        self.passages = dict()
         self.tokens = dict()
 
         self.mapping = dict()
         self.err_files = [] 
         self.metadata = []
+
+        # Load pdfs into memory
+        self.load_pdf(dirobj)
 
     def __len__(self):
         return len(self.mapping)
@@ -175,15 +185,16 @@ class PdfContainer(object):
         jarPath = os.path.join('cfg', 'tika', 'tika-server.jar')
         jarDir = os.path.join('cfg', 'tika')
 
-        print('Sapling is setting up PDF parser...')
+        print('Sapling is setting up PDF parser...\n')
 
         if not os.path.exists(jarPath):
             print('Need to download the parser, please ensure you are connected to the Internet')
-            os.makedirs(jarDir, exists_ok=True)
             tika.getRemoteJar(tika.TikaServerJar, jarPath)
 
             if tika.checkJarSig(tika.TikaServerJar, jarPath):
-                print('Sapling has downloaded PDF parser...')
+                print('Sapling has downloaded PDF parser...\n')
+            else:
+                print('Error occured when downloading PDF parser...\n')
 
         # Set 'main' tika env vars to local path
         # Note: tika's log_path already modified to local path at source
@@ -226,15 +237,15 @@ class PdfContainer(object):
         self.set_tika_env()
         config.Delay
 
-        if config.SaplingXHTML:
+        if config.UserXhtml:
             if not os.path.exists('xml'):
                 os.mkdir('xml')
 
-        if config.SaplingTXT:
+        if config.UserTxt:
             if not os.path.exists('txt'):
                 os.mkdir('txt')
 
-        print('Loading those pdfs....')   
+        print('Loading those pdfs....\n')
 
         for file_name in tqdm(file_list):
 
@@ -272,14 +283,14 @@ class PdfContainer(object):
             
             # Convert paragraphs into format that Sapling can process
             # and save a copy of that as txt file locally
-            if config.UserTxT:
+            if config.UserTxt:
                 txt_filepath = os.path.join('txt', file_name[:-3] +'.txt')
                 with open(txt_filepath, 'w', errors='xmlcharrefreplace') as f:
                     f.write(f'{title}\n\n')
                     for pr in raw:
                         f.write(f'{raw[pr]}\n')
 
-            self.passages.append(raw)
+            self.passages[file_name] = raw
             self.tokens[file_name] = words
             self.mapping[file_name] = counter
             self.metadata.append({ 
@@ -404,7 +415,7 @@ def construct_paragraph(pages, title):
             # Standardize newlines to tidy up parsed text
             tmp = pages[page][i].replace(' \n', '\n').replace('-\n', '').replace('\n', ' ')
                 
-            if tmp.rstrip[-1] == '.':
+            if tmp.rstrip().endswith('.'):
                 tmp = tmp.rstrip()
 
             # If title appears in the processed text, discard it
@@ -438,13 +449,17 @@ def construct_paragraph(pages, title):
                     paragraphs.append(tbc)
                 #else: 
                  #   paragraphs.extend(process_paragraphs(tbc))
-
-                words.extend(tokens)                   
-                tbc = ''
+                    words.extend(tokens)
+                    tbc = ''
+                else:
+                    continue
 
             # otherwise concat string
             else:
-                tbc += f' {tmp}'
+                if tmp.endswith(' '):
+                    tbc += tmp
+                else:
+                    tbc += f' {tmp}'
 
             if re.match(reference, tmp) is not None:
                 return paragraphs, words
@@ -518,25 +533,21 @@ def tokenize(document):
     Process document by coverting all words to lowercase, and removing any
     punctuation or English stopwords.
     """
-    import string
-    from nltk.corpus import stopwords
-    from nltk.tokenize import wordpunct_tokenize
-    #from nltk.stem import WordNetLemmatizer
 
     stopwords_list = stopwords.words('english')
-    #wnl = WordNetLemmatizer()
+    wnl = WordNetLemmatizer()
 
     # Process: tokenize string --> filter punctuation --> convert to lowercase
     wordlist = [(word.lower() if word.isalpha() else word)
                     for word in wordpunct_tokenize(document)
-                    if word not in string.punctuation]
+                    if word not in punctuation]
 
     # Filter out stop words from the list
     wordlist = [token for token in wordlist
                     if token not in stopwords_list]
 
     # Lemmatize remaining words from the list
-    #wordlist = [wnl.lemmatize(wd) for wd in wordlist]
+    wordlist = [wnl.lemmatize(wd) for wd in wordlist]
 
     return wordlist
 

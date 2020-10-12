@@ -15,7 +15,7 @@ from random import choice
 from . import config
 
 ### Color schemes
-CLR_SYS = bg(9) # Color for displaying high level msg
+CLR_SYS = bg(22) # Color for displaying high level msg
 CLR_FILE = fg(12) # Color for displaying compatible files
 CLR_UI = fg(46) # Color for displaying user interactions
 CLR_WARN = bg(11) + fg(1) + attr(1) # Color for displaying serious errors
@@ -96,7 +96,7 @@ def process_options(selection):
         if option != 'logic':
             print(selection[option])
 
-    print("(type 'quit' anytime to shutdown Sapling)")
+    print("(typing 'quit' will shutdown Sapling)")
     # Get and validate user input
     while True:
         sel = input(f'{CLR_UI}Please enter your numeric choice:{C_RESET} ')
@@ -143,7 +143,7 @@ def kill_java():
         print('Attempting to terminate Java runtime...')
         os.kill(Java_pid, signal.SIGTERM)
 
-        print('Successfully terminated Java runtime')
+        print('Successfully terminated Java runtime\n')
     else:
         print("Info: Java runtime not found to be running\n")
 
