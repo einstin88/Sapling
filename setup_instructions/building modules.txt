@@ -1,0 +1,5 @@
+1. create setup.py 
+
+2. To install, run 'python setup.py develop'
+
+3. To uninstall, run 'python setup.py develop --uninstall'

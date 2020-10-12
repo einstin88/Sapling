@@ -1,0 +1,22 @@
+1. download & install anaconda
+
+2. add these paths to system environment $PATH to be able to run Python, Pip and Conda in cmd shell
+	- C:\Users\*_*\anaconda3
+	- C:\Users\*_*\anaconda3\Scripts
+
+	*For Mac*
+	- sudo nano /etc/paths
+	- add ananconda installed path into the file, save and exit
+	- restart Terminal
+
+3. copy the following from .\Library\bin to .\DLLs to be able to USE conda and pip in cmd shell
+	- libcrypto-1_1-x64.dll
+	- libssl-1_1-x64.dll
+	** PyQt5 designer exe is also in the same folder
+
+4. update all conda/python packages
+	- run -> Conda update --all
+
+5. Conda needs to be 'activated' to properly import scripts in the shell (eg. CMD/Terminal).
+	- in CMD, run 'conda init cmd.exe' --> run 'conda activate'
+	 (https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment)

@@ -1,20 +1,30 @@
 **\*NOTE: this is just a rough outline, most of the contents are still work in progress**
 
 # Sapling 
-- current release: `v0.1`
-- *Provide intelligent answers based on your given reading materials???*
-- Intended for journal articles, but can also be used for any text files such as pdf of textbook chapters or e-book
+- current release: `v0.1` [released for beta testing]
+- Aims to help students pin-point answers from a large corpus of journal articles. It could also work for other formats of texts, suchs as textbook chapters or e-books.
+- In doing so, the creation of Sapling hopes 
+	1. to reduce the time needed by students' to learn about a (usually new) topic 
+	2. to provides answers on the fly, such as during lectures and in workgroup sessions, or when refreshing knowledge on topics that was learnt months or years ago
+	3. to help reduce anxiety, due to information overload, while preparing for exams or essay writing
+	4. to ultimately reduce the knowledge acquisition barrier to help every one succeed in their education journey
+- Inspired by advancements in AI on Natural Language Processing (NLP) such as IBM's Watson and FB's DrQA.
+
 
 ## Features
-- search keywords across multiple documents and return the 5 most relevant sentences
+- *search keywords across multiple documents and return the 5 most relevant sentences*
+- works by harnessing modern computers' ability to **quickly compare content diversity among texts**. So, for Sapling to work for you with higher accuracy, the more texts files you feed it the better (*note2*). You could for example feed it with all the articles and book chapters required for a course!
+- Currently **supports most PDFs and `.txt` files**. Support for docx will be added in an upcoming version.
+- *Uses artificial neural networks to perform machine comprehension of your texts, result in better matches for given queries*
 
 *Notes*
-1. Returned sentences may not be full sentence. This will be fixed in future versions
+1. Returned sentences may not be full sentence. This will be fixed in the upcoming versions.
+2. Sapling has not yet been tested to its limit, but is imagined to suffer in performance when given hundreds of files. Performance is also machine dependant: processor speed, memory size and availability of GPUs/TPUs.
 
 
 ## How To's:
-1. **Installation and using Sapling for the first time**	
-	- Download 'Sapling' for [Windows]() [Mac]()
+1. **Setup Sapling for the first time**	
+	- Download 'Sapling' for [Windows (100MB)]() [Mac (400MB)]()
 		- [ ] post links once program is completed and compiled
 
 	- latest Java runtime installed 

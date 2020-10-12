@@ -1,0 +1,9 @@
+1. download ST3
+	- https://www.sublimetext.com/3
+
+2. Install package manager
+	- under Tools > install package manager
+
+3. Install packages
+	- preference > package control > install packages > 'type package name'
+		> sidebarenhancement
