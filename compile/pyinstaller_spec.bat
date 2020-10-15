@@ -1,7 +1,9 @@
 cd C:\Users\pelie\venv\Scripts
-pyi-makespec --specpath="C:\Users\pelie\Documents\eDx\Python\Project Sapling" ^
---onefile -n Sapling ^
---add-data "C:\Users\pelie\Documents\eDx\Python\Project Sapling\logo";".\logo" ^
---upx-exclude ucrtbase.dll ^
---upx-exclude VCRUNTIME140.dll ^
-"C:\Users\pelie\Documents\eDx\Python\Project Sapling\project_sapling.py"
+pyi-makespec --specpath="D:\Sapling-Release" ^
+--onedir ^
+--add-data "C:\Users\pelie\Google Drive\Project Sapling\logo";".\logo" ^
+--add-data "C:\Users\pelie\Google Drive\Project Sapling\sacremoses";".\sacremoses" ^
+-i="C:\Users\pelie\Google Drive\Project Sapling\img\sap.ico" ^
+-p="C:\Users\pelie\venv\Lib\site-packages" ^
+"C:\Users\pelie\Google Drive\Project Sapling\Sapling.py"
+PAUSE

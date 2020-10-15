@@ -46,8 +46,8 @@ def disp_banner(version):
     file = choice(os.listdir(path))
     top = [f'Hey there! This is Sapling v.{version}.',
            'It\'s so nice to meet you!\n']
-    end_quote = ['For instructions, tutorials and latest updates, please visit',
-                 'https://github.com/einstin88/Sapling/blob/master/README.md']
+    end_quote = ['For instructions and latest updates, please visit',
+                 'https://github.com/einstin88/sapling-release']
     min_length = max(len(i) for i in end_quote)
 
     with open(os.path.join(path, file), encoding='utf-8') as f:
@@ -110,6 +110,7 @@ def process_options(selection):
                 sel = int(sel)
             except:
                 print(err_msg)
+                continue
 
         if 0 < sel <= len(selection['logic']):
             return selection['logic'][sel - 1]
@@ -118,7 +119,7 @@ def process_options(selection):
             print(err_msg)
 
 
-def check_mem(limit_percent=70, limit_kb= 1_000_000):
+def check_mem(limit_percent=85, limit_kb= 1_000_000):
     mem = psutil.virtual_memory()
 
     if mem.percent > limit_percent or mem.free < limit_kb:
@@ -127,22 +128,50 @@ def check_mem(limit_percent=70, limit_kb= 1_000_000):
     else:
         return False
 
+
+def check_java_vers():
+
+    j_cmd = 'java -version'
+    print('Checking Java version...')
+    try:
+        j = run(j_cmd, capture_output=True, shell=True)
+    except FileNotFoundError:
+        print('Could not find Java in system path...')
+        terminate()
+
+    version = j.stderr.decode(encoding='utf-8')
+
+    if '1.8' in version or '1.7' in version:
+        print('PASS :))')
+        return True
+    else:
+        print('Java did not meet minimum requirement')
+        return False
+
 def check_java_running():
 
+    global Java_pid
+
     # https://thispointer.com/python-check-if-a-process-is-running-by-name-and-find-its-process-id-pid/
-    for ps in psutil.process_iter():
-        if 'java.exe' in ps.name():
-            global Java_pid
+    process_found = False
+    for ps in psutil.process_iter(['pid', 'name']):
+        if 'java' in ps.name():
             Java_pid = ps.pid
+            process_found = True
             break
+
+    if not process_found:
+        Java_pid = False
 
 
 def kill_java():
 
+    global Java_pid
+    
     if Java_pid:
         print('Attempting to terminate Java runtime...')
         os.kill(Java_pid, signal.SIGTERM)
-
+        Java_pid = False
         print('Successfully terminated Java runtime\n')
     else:
         print("Info: Java runtime not found to be running\n")
@@ -153,7 +182,8 @@ def open_file(file_path):
     if config.WINDOWS:
         os.startfile(file_path)
     else:
-        run(f'open {file_path}')
+        cmd_file = f'open {file_path}'
+        run(cmd_file, shell=True)
 
 
 def terminate():
@@ -163,8 +193,16 @@ def terminate():
 
     # TODO - Message to be replaced with link to Google Form 
     print('Shutting down...')
-    kill_java()
+    if Java_pid:
+        kill_java()
     print(f'{CLR_SYS}Thank you for using Sapling. For feedbacks or issues, please contact me at pelie_888888@hotmail.com{C_RESET}')
     print('Goodbye!')
 
     sys.exit()
+
+
+
+if check_java_vers():
+    config.setup_folders()
+else:
+    terminate()

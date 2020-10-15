@@ -1,6 +1,8 @@
 nltk
+tqdm
 colored
 tika
 lxml
 psutil
-transformers
+torch
+transformers[torch]

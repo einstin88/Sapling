@@ -11,7 +11,7 @@ import os #, json
 from time import sleep
 
 # Machine settings
-#WINDOWS = True if 'nt' in os.name else False
+WINDOWS = True if 'nt' in os.name else False
 
 # User settings
 UserXhtml = False
@@ -25,17 +25,48 @@ Pause = sleep(3)
 
 
 def setup_folders():
-    #if not os.path.exists('cfg'):
-     #   os.mkdir('cfg')
 
     jarDir = os.path.join('cfg', 'tika')
     if not os.path.exists(jarDir):
         os.makedirs(jarDir, exist_ok=True)
 
-setup_folders()
+
+def config_save_txt():
+
+	print('To speed up your future queries if you are using the same directory, Sapling can save the parsed PDFs as texts on your computer.')
+	print(' Would you like to do that? [Y/N]')
+
+	while True:
+		sel = input("Please enter 'Y' or 'N': ")
+
+		try:
+			sel = sel.lower()
+			break
+		except :
+			print(f'{sel} is not a recognized option')
+			continue
+
+	global UserTxt, txtDir
+	if sel == 'y':
+		UserTxt = True
+		txtDir = 'SavedTexts'
+
+		if not os.path.exists(txtDir):
+			os.mkdir(txtDir)
+
+	elif sel == 'n':
+		UserTxt = False
 
 
 '''
+
+### Goal: save parsed pdfs into texts for future retrieval
+Req: mapping (directory & file list) --> folder name created for storage
+- mappings saved with JSON as history records, can be easily used to retrieve data in future
+
+Req: option to save data during boot up
+
+
 class SaplingConfig(object):
 	"""
 	docstring for SaplingConfig

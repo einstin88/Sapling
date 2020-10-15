@@ -107,7 +107,7 @@ class QueryContainer(object):
             query = input(f"{CLR_UI}So, what question does this human like Sapling to answer?{C_RESET}\n")
             query_tokens = set(tokenize(query))
 
-            if 2 < len(query_tokens) <= 50:
+            if 1 < len(query_tokens) <= 50:
                 print('Gotcha...')
                 self.add_query(query, query_tokens)
                 break

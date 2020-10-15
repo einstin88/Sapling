@@ -68,6 +68,8 @@ class DirContainer(object):
             # Correct input format when path was given by user using drag and drop
             if directory[0] == '\'':
                 directory = directory[1:-1]
+            if not config.WINDOWS:
+                directory = directory.replace('\,',',').replace('\ ', ' ').strip()
         
             # Check if valid path is given
             if os.path.exists(directory):
@@ -185,10 +187,13 @@ class PdfContainer(object):
         jarPath = os.path.join('cfg', 'tika', 'tika-server.jar')
         jarDir = os.path.join('cfg', 'tika')
 
-        print('Sapling is setting up PDF parser...\n')
-
-        if not os.path.exists(jarPath):
+        if not os.path.exists(jarPath) or not tika.checkJarSig(tika.TikaServerJar, jarPath):
             print('Need to download the parser, please ensure you are connected to the Internet')
+            try:
+                os.remove(jarPath)
+            except:
+                pass
+
             tika.getRemoteJar(tika.TikaServerJar, jarPath)
 
             if tika.checkJarSig(tika.TikaServerJar, jarPath):
@@ -201,14 +206,22 @@ class PdfContainer(object):
         tika.TikaServerJar = jarPath
         tika.TikaJarPath = jarDir
 
-        if not tika.TikaServerProcess:
+        if not tika.TikaServerProcess:                
             try:
-                tika.startServer(jarPath)
+                #tika.startServer(jarPath)
+                tika.checkTikaServer()
+                utils.check_java_running()
+                if utils.Java_pid:
+                    print('PDF parser loaded...')
+            
             except:
-                utils.open_file(jarPath)
-
-            utils.check_java_running()
-
+                if config.WINDOWS:
+                    utils.open_file(jarPath)
+                else:
+                    print(f"{CLR_SOFT_WARN}Can't run Java automatically because your MacOS is 10.14 or older. To continue, please double-click on 'tika-server.jar'{C_RESET}")
+                    utils.open_file(jarDir)
+                    _ = input('Enter any key...')
+            
 
     def load_pdf(self, dirobj):
         '''
@@ -234,16 +247,18 @@ class PdfContainer(object):
         directory = dirobj.directory
 
         # Check set ups of the environment
-        self.set_tika_env()
-        config.Delay
+        utils.check_java_running()
+        if not utils.Java_pid:
+            print('Sapling is setting up PDF parser...\n')
+            self.set_tika_env()
 
         if config.UserXhtml:
             if not os.path.exists('xml'):
                 os.mkdir('xml')
 
-        if config.UserTxt:
-            if not os.path.exists('txt'):
-                os.mkdir('txt')
+        #if config.UserTxt:
+         #   if not os.path.exists('txt'):
+          #      os.mkdir('txt')
 
         print('Loading those pdfs....\n')
 
@@ -251,7 +266,6 @@ class PdfContainer(object):
 
             file_path = os.path.join(directory, file_name)
 
-            # Load file into memory
             parsed_file = parser.from_file(file_path, xmlContent=True)
 
             # Save the parsed pdf to xhtml 
@@ -284,9 +298,9 @@ class PdfContainer(object):
             # Convert paragraphs into format that Sapling can process
             # and save a copy of that as txt file locally
             if config.UserTxt:
-                txt_filepath = os.path.join('txt', file_name[:-3] +'.txt')
+                txt_filepath = os.path.join(config.txtDir, file_name[:-3] +'.txt')
                 with open(txt_filepath, 'w', errors='xmlcharrefreplace') as f:
-                    f.write(f'{title}\n\n')
+                    #f.write(f'{title}\n\n')
                     for pr in raw:
                         f.write(f'{raw[pr]}\n')
 
@@ -308,18 +322,19 @@ class PdfContainer(object):
 
         if len(self.err_files) > 0:
             print()
-            print('Sorry, text' + ('s ' if len(self.err_files) > 1 else ' ') +
+            print(f'{CLR_SOFT_WARN}Sorry, text' + ('s ' if len(self.err_files) > 1 else ' ') +
                    'in the following file' +
                    ('s are ' if len(self.err_files) > 1 else ' is ') +
-                   'not parsable: ')
+                   f'not parsable:{C_RESET}')
 
             for i, file in enumerate(self.err_files):
                 print(f'{i+1}. {file}')
             print()
 
         # Free up system memory if it is low
+        utils.check_java_running()
         if utils.check_mem():
-            tika.killServer()
+            #tika.killServer()
             utils.kill_java()
 
 def clean_xml(tree, n_pages):
