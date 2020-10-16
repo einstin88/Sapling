@@ -16,7 +16,7 @@ import os
 
 from .DataProcessor import tokenize
 from . import config, utils
-from .utils import CLR_SYS, CLR_FILE, CLR_UI, CLR_WARN, CLR_SOFT_WARN, C_RESET
+from .utils import CLR_SYS, CLR_FILE, CLR_UI, CLR_RES, CLR_WARN, CLR_SOFT_WARN, C_RESET
 
 from collections import Counter
 from nltk.tokenize import sent_tokenize
@@ -183,9 +183,9 @@ class QueryContainer(object):
         scores = []
         for i, loss_val in enumerate(sorted(self.matches.keys())):
             scores.append(loss_val)
-            print(f'{CLR_FILE}{i+1}. ', self.matches[loss_val]['file'],
+            print(f'{CLR_FILE}{i+1}. File Name:', self.matches[loss_val]['file'],
                   f'{C_RESET}(Confidence: {(1 - loss_val):.{2}%})')
-            print(f'Match:\n{CLR_SYS}', self.matches[loss_val]['answer'], f'{C_RESET}\n')
+            print(f'Match:\n{CLR_RES}', self.matches[loss_val]['answer'], f'{C_RESET}\n')
             print('In the passage:\n', self.matches[loss_val]['context'], '\n\n')
 
         ### Get feedback ###

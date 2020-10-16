@@ -678,7 +678,7 @@ def startServer(tikaServerJar, java_path = TikaJava, java_args = TikaJavaArgs, s
             # Python 3.x
             TikaServerProcess = Popen(cmd_string, stdout=logFile, stderr=STDOUT, shell=True, start_new_session=True)
     else:
-        TikaServerProcess = Popen(cmd_string, stdin=PIPE, stdout=logFile, stderr=STDOUT, shell=True, preexec_fn=os.setsid) 
+        TikaServerProcess = Popen(cmd_string, stdout=logFile, stderr=STDOUT, shell=True, preexec_fn=os.setsid) 
     
     #TikaServerProcess = True if TikaServerProcess.returncode == 0 else False
     #TikaServerProcess = True if TikaServerProcess == 0 else False

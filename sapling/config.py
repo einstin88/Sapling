@@ -15,7 +15,7 @@ WINDOWS = True if 'nt' in os.name else False
 
 # User settings
 UserXhtml = False
-UserTxt = False
+UserTexts = False
 FILE_MATCHES = 3
 SENTENCE_MATCHES = 5
 
@@ -24,38 +24,46 @@ Delay = sleep(5)
 Pause = sleep(3)
 
 
-def setup_folders():
+def setup_folders(path1, path2=''):
+    dirpath = os.path.join(path1, path2)
+    if not os.path.exists(dirpath):
+        os.makedirs(dirpath, exist_ok=True)
 
-    jarDir = os.path.join('cfg', 'tika')
-    if not os.path.exists(jarDir):
-        os.makedirs(jarDir, exist_ok=True)
 
+def config_save_data():
 
-def config_save_txt():
+	print('To speed up your future queries if you are using the same directory, Sapling can save the parsed PDFs')
+	
+	for i, filetype in enumerate(['Texts', 'Xhtml']):
+		print(f'[{i+1}] as {filetype} on your computer.')
+		print('Would you like to do that?')
 
-	print('To speed up your future queries if you are using the same directory, Sapling can save the parsed PDFs as texts on your computer.')
-	print(' Would you like to do that? [Y/N]')
+		while True:
+			sel = input("Please enter 'Y' or 'N': ")
 
-	while True:
-		sel = input("Please enter 'Y' or 'N': ")
+			try:
+				sel = sel.lower()
+				break
+			except :
+				print(f'{sel} is not a recognized option\n')
+				continue
 
-		try:
-			sel = sel.lower()
-			break
-		except :
-			print(f'{sel} is not a recognized option')
-			continue
+		if sel == 'y':
+			varName = 'User' + filetype
+			exec(varName + ' = True', globals())
 
-	global UserTxt, txtDir
-	if sel == 'y':
-		UserTxt = True
-		txtDir = 'SavedTexts'
+			dirpath = os.path.join('data', f'saved_{filetype}')
+			setup_folders(dirpath)
+		elif sel == 'n':
+			exec(varName + ' = False', globals())
 
-		if not os.path.exists(txtDir):
-			os.mkdir(txtDir)
+		if UserTexts and filetype == 'Texts':
+			global TextsDir
+			TextsDir = dirpath
 
-	elif sel == 'n':
-		UserTxt = False
+		elif UserXhtml and filetype == 'Xhtml':
+			global XhtmlDir
+			XhtmlDir = dirpath
 
 
 '''

@@ -18,6 +18,7 @@ from lxml.etree import HTMLParser, parse
 from string import punctuation
 from tika import tika, parser
 from tqdm import tqdm
+from multiprocessing import Process, set_start_method
 
 from nltk.corpus import stopwords
 from nltk.tokenize import wordpunct_tokenize
@@ -182,7 +183,8 @@ class PdfContainer(object):
     def get_idfs(self):
         self.idfs = compute_idfs(self.tokens)
 
-    def set_tika_env(self):
+    @classmethod
+    def set_tika_env(cls):
 
         jarPath = os.path.join('cfg', 'tika', 'tika-server.jar')
         jarDir = os.path.join('cfg', 'tika')
@@ -206,22 +208,6 @@ class PdfContainer(object):
         tika.TikaServerJar = jarPath
         tika.TikaJarPath = jarDir
 
-        if not tika.TikaServerProcess:                
-            try:
-                #tika.startServer(jarPath)
-                tika.checkTikaServer()
-                utils.check_java_running()
-                if utils.Java_pid:
-                    print('PDF parser loaded...')
-            
-            except:
-                if config.WINDOWS:
-                    utils.open_file(jarPath)
-                else:
-                    print(f"{CLR_SOFT_WARN}Can't run Java automatically because your MacOS is 10.14 or older. To continue, please double-click on 'tika-server.jar'{C_RESET}")
-                    utils.open_file(jarDir)
-                    _ = input('Enter any key...')
-            
 
     def load_pdf(self, dirobj):
         '''
@@ -247,18 +233,12 @@ class PdfContainer(object):
         directory = dirobj.directory
 
         # Check set ups of the environment
-        utils.check_java_running()
-        if not utils.Java_pid:
-            print('Sapling is setting up PDF parser...\n')
-            self.set_tika_env()
+        if not tika.TikaServerProcess:
+            print('Sapling is setting up PDF parser...')
+            PdfContainer.set_tika_env()
 
-        if config.UserXhtml:
-            if not os.path.exists('xml'):
-                os.mkdir('xml')
-
-        #if config.UserTxt:
-         #   if not os.path.exists('txt'):
-          #      os.mkdir('txt')
+        _ = parser.from_file(os.path.join(directory, file_list[0]))
+        print('PDF parser loaded...')
 
         print('Loading those pdfs....\n')
 
@@ -270,7 +250,7 @@ class PdfContainer(object):
 
             # Save the parsed pdf to xhtml 
             if config.UserXhtml:
-                xhtml_filepath = os.path.join('xml', file_name[:-3] +'.xhtml')
+                xhtml_filepath = os.path.join(config.XhtmlDir, file_name[:-3] +'.xhtml')
                 with open(xhtml_filepath, 'w', errors='xmlcharrefreplace') as f:
                     f.write(parsed_file[tp[3]])
 
@@ -297,12 +277,12 @@ class PdfContainer(object):
             
             # Convert paragraphs into format that Sapling can process
             # and save a copy of that as txt file locally
-            if config.UserTxt:
-                txt_filepath = os.path.join(config.txtDir, file_name[:-3] +'.txt')
+            if config.UserTexts:
+                txt_filepath = os.path.join(config.TextsDir, file_name[:-3] +'.txt')
                 with open(txt_filepath, 'w', errors='xmlcharrefreplace') as f:
                     #f.write(f'{title}\n\n')
                     for pr in raw:
-                        f.write(f'{raw[pr]}\n')
+                        f.write(f'{pr}\n')
 
             self.passages[file_name] = raw
             self.tokens[file_name] = words
@@ -334,7 +314,6 @@ class PdfContainer(object):
         # Free up system memory if it is low
         utils.check_java_running()
         if utils.check_mem():
-            #tika.killServer()
             utils.kill_java()
 
 def clean_xml(tree, n_pages):
@@ -459,11 +438,8 @@ def construct_paragraph(pages, title):
                     
                 tokens = tokenize(tbc)
 
-                #if 6 < len(tokens) <= 512:
                 if len(tokens) > 6:
                     paragraphs.append(tbc)
-                #else: 
-                 #   paragraphs.extend(process_paragraphs(tbc))
                     words.extend(tokens)
                     tbc = ''
                 else:
@@ -481,31 +457,6 @@ def construct_paragraph(pages, title):
 
     return paragraphs, words
 
-'''
-def process_paragraphs(passage):
- 
-    words = passage.split()
-    split_passage = []
-    prev_split_idx = 0
-    
-    for i in range(1, len(words)//512 + 1):
-        search_idx = i * 512 - 1
-        
-        while True:    
-            if words[search_idx][-1] == '.':
-                split_idx = passage.rfind(words[search_idx], prev_split_idx, search_idx) + 1
-                split_passage.append(passage[prev_split_idx : split_idx])
-                prev_split_idx = split_idx
-                break
-
-            else:
-                search_idx -= 1
-
-    if split_idx < len(words):
-        split_passage.append(passage[split_idx : ])
-
-    return split_passage
-'''
 
 def find_header(susses, headers):
 

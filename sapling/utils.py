@@ -18,6 +18,7 @@ from . import config
 CLR_SYS = bg(22) # Color for displaying high level msg
 CLR_FILE = fg(12) # Color for displaying compatible files
 CLR_UI = fg(46) # Color for displaying user interactions
+CLR_RES = bg(4)
 CLR_WARN = bg(11) + fg(1) + attr(1) # Color for displaying serious errors
 CLR_SOFT_WARN = fg(1) # Color for displaying warnings
 C_RESET = style.RESET
@@ -119,7 +120,7 @@ def process_options(selection):
             print(err_msg)
 
 
-def check_mem(limit_percent=85, limit_kb= 1_000_000):
+def check_mem(limit_percent=75, limit_kb= 1_500_000):
     mem = psutil.virtual_memory()
 
     if mem.percent > limit_percent or mem.free < limit_kb:
@@ -141,12 +142,24 @@ def check_java_vers():
 
     version = j.stderr.decode(encoding='utf-8')
 
-    if '1.8' in version or '1.7' in version:
-        print('PASS :))')
-        return True
+    if config.WINDOWS:
+        if '1.8' in version or '1.7' in version:
+            java_flag = True
+        else:
+            java_flag = False
     else:
-        print('Java did not meet minimum requirement')
-        return False
+        if 'java version "15"' in version:
+            java_flag = True
+        else:
+            java_flag = False
+
+    if java_flag:
+        print('PASS :))\n')
+    else:
+        print('Java did not meet minimum requirement\n')
+
+    return java_flag
+
 
 def check_java_running():
 
@@ -169,12 +182,12 @@ def kill_java():
     global Java_pid
     
     if Java_pid:
-        print('Attempting to terminate Java runtime...')
+        print(f'{CLR_SYS}Attempting to terminate Java runtime...{C_RESET}')
         os.kill(Java_pid, signal.SIGTERM)
         Java_pid = False
-        print('Successfully terminated Java runtime\n')
+        print(f'{CLR_SYS}Successfully terminated Java runtime{C_RESET}\n')
     else:
-        print("Info: Java runtime not found to be running\n")
+        print(f"{CLR_SOFT_WARN}Info: Java runtime not found to be running{C_RESET}\n")
 
 
 def open_file(file_path):
@@ -199,10 +212,3 @@ def terminate():
     print('Goodbye!')
 
     sys.exit()
-
-
-
-if check_java_vers():
-    config.setup_folders()
-else:
-    terminate()

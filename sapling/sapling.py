@@ -86,7 +86,18 @@ def main():
 
             if choice == 1:
                 utils.open_file(result)
-                continue
+                
+                options_1_1 = {
+                '1': '[1] Would you like to ask something else?',
+                '2': '[2] or quit program',
+                'logic': utils.Default_logic
+                }
+                choice = utils.process_options(options_1_1)
+
+                if choice:
+                    continue
+                else:
+                    utils.terminate()
 
             elif choice == 2:
                 continue
@@ -106,3 +117,4 @@ def main():
                 continue
             else:
                 utils.terminate()
+
