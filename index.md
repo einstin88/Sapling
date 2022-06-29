@@ -1,4 +1,4 @@
-![Sapling Logo](https://github.com/einstin88/sapling/blob/master/img/original.jpeg)
+![Sapling Logo](/img/original.jpeg)
 
 # Sapling 🌱 <a name="top"></a>
 - current release: `v0.1` 
@@ -73,11 +73,11 @@ The creation of Sapling hopes :-
 	
 	<ins>This is the folder with the PDFs</ins>
 
-	![directory](https://github.com/einstin88/sapling/blob/master/img/mac_folder_1.png)
+	![directory](/img/mac_folder_1.png)
 
 	<ins>The full path to the folder provided like this</ins>
 
-	![then path to the folder](https://github.com/einstin88/sapling/blob/master/img/provide_path.png)
+	![then path to the folder](/img/provide_path.png)
 
 	- <ins>For macOS</ins>: **2 easy ways to copy the folder path**
 		1. ***Option 1:***
@@ -85,7 +85,7 @@ The creation of Sapling hopes :-
 		2. ***Option 2:***
 			- Right click on the folder, then **hold** the 'option' key. You should see `'Copy xxx as pathname'` option
 	
-	![copy path on mac](https://github.com/einstin88/sapling/blob/master/img/mac_folder_3.JPG)
+	![copy path on mac](/img/mac_folder_3.JPG)
 
 	- You can easily drag and drop into the console on Windows
 
@@ -97,11 +97,11 @@ The creation of Sapling hopes :-
 ### Example query & results: <a name="examples"></a>
 <ins>Key in a question</ins>
 
-![Example query](https://github.com/einstin88/sapling/blob/master/img/query.png)
+![Example query](/img/query.png)
 
 ***Voila!***
 
-![Results](https://github.com/einstin88/sapling/blob/master/img/result_disp.png)
+![Results](/img/result_disp.png)
 
 
 ## FAQ <a name="fifth"></a>
